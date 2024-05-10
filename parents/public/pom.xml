@@ -1,300 +1,236 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
- ~ Hibernate Search, full-text search for your domain model
- ~
- ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later
- ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
-  -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.hibernate.search</groupId>
-        <artifactId>hibernate-search-parent</artifactId>
-        <version>6.1.7.Final</version>
-        <relativePath>../..</relativePath>
-    </parent>
-    <artifactId>hibernate-search-parent-public</artifactId>
-    <packaging>pom</packaging>
-
-    <name>Hibernate Search Parent POM for Public Artifacts</name>
-    <description>Common build configuration for all public artifacts</description>
-
-    <properties>
-        <javadoc.packagelists.directory>${project.build.directory}/dependencies-javadoc-packagelists</javadoc.packagelists.directory>
-    </properties>
-
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-jar-plugin</artifactId>
-                    <configuration>
-                        <archive>
-                            <manifestEntries>
-                                <Implementation-Title>${project.name}</Implementation-Title>
-                                <Implementation-Version>${project.version}</Implementation-Version>
-                                <Implementation-Vendor>hibernate.org</Implementation-Vendor>
-                                <Implementation-Vendor-Id>hibernate.org</Implementation-Vendor-Id>
-                                <Implementation-URL>http://hibernate.org/search/</Implementation-URL>
-                                <Automatic-Module-Name>${java.module.name}</Automatic-Module-Name>
-                            </manifestEntries>
-                        </archive>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>${version.javadoc.plugin}</version>
-                    <configuration>
-                        <!-- Fail on error alternative -->
-                        <quiet>true</quiet>
-                        <verbose>false</verbose>
-                        <failOnWarnings>true</failOnWarnings>
-                        <failOnError>true</failOnError>
-                        <release>${maven.compiler.release}</release>
-                        <!-- Exclude implementation classes from the javadoc -->
-                        <excludePackageNames>*.impl,*.impl.*</excludePackageNames>
-                        <!--
-                            Make sure to always use offline links,
-                            otherwise the build will need to access external websites,
-                            which leads to build failures from time to time when the websites are not available
-                            (used to happen a lot with apache.org in particular).
-                            maven-javadoc-plugin needs a package-list file to determine,
-                            for each package/class, the most appropriate link.
-                            These files are fetched from javadoc Maven artifacts
-                            in the build-config module and regrouped in a single ZIP
-                            (see maven-assembly-plugin config in the build-config POM)
-                            which is then extracted to target/ in each module that needs to generate javadoc
-                            (see maven-dependency-plugin config in this POM).
-                          -->
-                        <offlineLinks>
-                            <offlineLink>
-                                <url>${javadoc.org.hibernate.url}</url>
-                                <location>${javadoc.packagelists.directory}/hibernate-core</location>
-                            </offlineLink>
-                            <offlineLink>
-                                <url>${javadoc.org.apache.lucene.core.url}</url>
-                                <location>${javadoc.packagelists.directory}/lucene-core</location>
-                            </offlineLink>
-                            <offlineLink>
-                                <url>${javadoc.org.apache.lucene.analyzers-common.url}</url>
-                                <location>${javadoc.packagelists.directory}/lucene-analyzers-common</location>
-                            </offlineLink>
-                            <offlineLink>
-                                <url>${javadoc.org.apache.lucene.queryparser.url}</url>
-                                <location>${javadoc.packagelists.directory}/lucene-queryparser</location>
-                            </offlineLink>
-                            <!-- For javax.batch in the JSR 352 modules -->
-                            <offlineLink>
-                                <url>${javadoc.javaee.url}</url>
-                                <location>${javadoc.packagelists.directory}/batch-api</location>
-                            </offlineLink>
-                            <!-- For jakarta.batch in the JSR 352 modules -->
-                            <offlineLink>
-                                <url>${javadoc.jakarta.batch.url}</url>
-                                <location>${javadoc.packagelists.directory}/batch-api</location>
-                            </offlineLink>
-                        </offlineLinks>
-                        <bottom>
-                            <![CDATA[Copyright &copy; ${project.inceptionYear}-{currentYear} <a href="https://www.redhat.com/">Red Hat, Inc.</a> and others. Licensed under the GNU Lesser General Public License (LGPL), version 2.1 or later.]]>
-                        </bottom>
-                        <additionalDependencies>
-                            <additionalDependency>
-                                <groupId>org.jboss.logging</groupId>
-                                <artifactId>jboss-logging-annotations</artifactId>
-                                <version>${version.org.jboss.logging.jboss-logging-tools}</version>
-                            </additionalDependency>
-                        </additionalDependencies>
-                        <tags>
-                            <tag>
-                                <name>hsearch.experimental</name>
-                                <placement>a</placement>
-                                <head>Experimental</head>
-                            </tag>
-                        </tags>
-                        <!-- Java 9+ supports HTML5 for javadoc generation -->
-                        <additionalOptions>-html5</additionalOptions>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.bsc.maven</groupId>
-                <artifactId>maven-processor-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.moditect</groupId>
-                <artifactId>moditect-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>add-module-infos</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>add-module-info</goal>
-                        </goals>
-                        <configuration>
-                            <jvmVersion>9</jvmVersion>
-                            <module>
-                                <moduleInfo>
-                                    <name>${java.module.name}</name>
-                                    <!-- Exports:
-                                             - some impl packages to org.jboss.logging so that it can instantiate
-                                               the generated Log/Messages classes
-                                             - all impl packages to org.hibernate.engine so that it can instantiate built-in
-                                               beans using reflection (e.g. annotation processors, bridges, binders)
-                                             - all non-impl (api, spi) packages to everyone
-                                     -->
-                                    <exports>
-                                        org.hibernate.search.*.logging.impl to org.jboss.logging, org.hibernate.search.engine;
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.hibernate.search</groupId>
+    <artifactId>hibernate-search-parent</artifactId>
+    <version>6.1.7.Final</version>
+    <relativePath>../..</relativePath>
+  </parent>
+  <artifactId>hibernate-search-parent-public</artifactId>
+  <packaging>pom</packaging>
+  <name>Hibernate Search Parent POM for Public Artifacts</name>
+  <description>Common build configuration for all public artifacts</description>
+  <properties>
+    <javadoc.packagelists.directory>${project.build.directory}/dependencies-javadoc-packagelists</javadoc.packagelists.directory>
+  </properties>
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <artifactId>maven-jar-plugin</artifactId>
+          <configuration>
+            <archive>
+              <manifestEntries>
+                <Implementation-Title>${project.name}</Implementation-Title>
+                <Implementation-Version>${project.version}</Implementation-Version>
+                <Implementation-Vendor>hibernate.org</Implementation-Vendor>
+                <Implementation-Vendor-Id>hibernate.org</Implementation-Vendor-Id>
+                <Implementation-URL>http://hibernate.org/search/</Implementation-URL>
+                <Automatic-Module-Name>${java.module.name}</Automatic-Module-Name>
+              </manifestEntries>
+            </archive>
+          </configuration>
+        </plugin>
+        <plugin>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>${version.javadoc.plugin}</version>
+          <configuration>
+            <quiet>true</quiet>
+            <verbose>false</verbose>
+            <release>${maven.compiler.release}</release>
+            <excludePackageNames>*.impl,*.impl.*</excludePackageNames>
+            <offlineLinks>
+              <offlineLink>
+                <url>${javadoc.org.hibernate.url}</url>
+                <location>${javadoc.packagelists.directory}/hibernate-core</location>
+              </offlineLink>
+              <offlineLink>
+                <url>${javadoc.org.apache.lucene.core.url}</url>
+                <location>${javadoc.packagelists.directory}/lucene-core</location>
+              </offlineLink>
+              <offlineLink>
+                <url>${javadoc.org.apache.lucene.analyzers-common.url}</url>
+                <location>${javadoc.packagelists.directory}/lucene-analyzers-common</location>
+              </offlineLink>
+              <offlineLink>
+                <url>${javadoc.org.apache.lucene.queryparser.url}</url>
+                <location>${javadoc.packagelists.directory}/lucene-queryparser</location>
+              </offlineLink>
+              <offlineLink>
+                <url>${javadoc.javaee.url}</url>
+                <location>${javadoc.packagelists.directory}/batch-api</location>
+              </offlineLink>
+              <offlineLink>
+                <url>${javadoc.jakarta.batch.url}</url>
+                <location>${javadoc.packagelists.directory}/batch-api</location>
+              </offlineLink>
+            </offlineLinks>
+            <bottom>Copyright &amp;copy; ${project.inceptionYear}-{currentYear} &lt;a href="https://www.redhat.com/">Red Hat, Inc.&lt;/a> and others. Licensed under the GNU Lesser General Public License (LGPL), version 2.1 or later.</bottom>
+            <additionalDependencies>
+              <additionalDependency>
+                <groupId>org.jboss.logging</groupId>
+                <artifactId>jboss-logging-annotations</artifactId>
+                <version>${version.org.jboss.logging.jboss-logging-tools}</version>
+              </additionalDependency>
+            </additionalDependencies>
+            <tags>
+              <tag>
+                <name>hsearch.experimental</name>
+                <placement>a</placement>
+                <head>Experimental</head>
+              </tag>
+            </tags>
+            <additionalOptions>-html5</additionalOptions>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <plugins>
+      <plugin>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.bsc.maven</groupId>
+        <artifactId>maven-processor-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <artifactId>maven-source-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.moditect</groupId>
+        <artifactId>moditect-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>add-module-infos</id>
+            <phase>package</phase>
+            <goals>
+              <goal>add-module-info</goal>
+            </goals>
+            <configuration>
+              <jvmVersion>9</jvmVersion>
+              <module>
+                <moduleInfo>
+                  <name>${java.module.name}</name>
+                  <exports>org.hibernate.search.*.logging.impl to org.jboss.logging, org.hibernate.search.engine;
                                         org.hibernate.search.*.reporting.impl to org.jboss.logging, org.hibernate.search.engine;
                                         org.hibernate.search.*.impl to org.hibernate.search.engine;
-                                        *;
-                                    </exports>
-                                    <!-- Requires:
-                                             - impl/internal Hibernate ORM and Hibernate Search packages are required non-transitively
-                                             - all other Hibernate ORM and Hibernate Search packages are required transitively
-                                             - all other packages are required non-transitively
-                                     -->
-                                    <requires>
-                                        org.hibernate.*.impl;
+                                        *;</exports>
+                  <requires>org.hibernate.*.impl;
                                         org.hibernate.*.internal;
                                         org.hibernate.*.impl.*;
                                         org.hibernate.*.internal.*;
                                         transitive org.hibernate.*;
-                                        *;
-                                    </requires>
-                                </moduleInfo>
-                            </module>
-                            <jdepsExtraArgs>
-                                <arg>--multi-release=9</arg>
-                            </jdepsExtraArgs>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+                                        *;</requires>
+                </moduleInfo>
+              </module>
+              <jdepsExtraArgs>
+                <arg>--multi-release=9</arg>
+              </jdepsExtraArgs>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  <profiles>
+    <profile>
+      <id>dist</id>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>unpack-dependencies-javadoc-packagelists</id>
+                <phase>${javadoc.download.phase}</phase>
+                <goals>
+                  <goal>unpack</goal>
+                </goals>
+                <configuration>
+                  <skip>${javadoc.download.phase}</skip>
+                  <artifactItems>
+                    <artifactItem>
+                      <groupId>${project.groupId}</groupId>
+                      <artifactId>hibernate-search-build-config</artifactId>
+                      <classifier>dependencies-javadoc-packagelists</classifier>
+                      <type>zip</type>
+                      <version>${project.version}</version>
+                    </artifactItem>
+                  </artifactItems>
+                  <outputDirectory>${javadoc.packagelists.directory}</outputDirectory>
+                  <overWriteSnapshots>true</overWriteSnapshots>
+                </configuration>
+              </execution>
+            </executions>
+            <dependencies>
+              <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>hibernate-search-build-config</artifactId>
+                <version>${project.version}</version>
+                <type>zip</type>
+                <classifier>dependencies-javadoc-packagelists</classifier>
+              </dependency>
+            </dependencies>
+          </plugin>
+          <plugin>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>generate-javadoc</id>
+                <phase>prepare-package</phase>
+                <goals>
+                  <goal>javadoc-no-fork</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
         </plugins>
-    </build>
-
-    <profiles>
-        <profile>
-            <id>dist</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-dependency-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>unpack-dependencies-javadoc-packagelists</id>
-                                <phase>${javadoc.download.phase}</phase>
-                                <goals>
-                                    <goal>unpack</goal>
-                                </goals>
-                                <configuration>
-                                    <skip>${javadoc.download.phase}</skip>
-                                    <artifactItems>
-                                        <artifactItem>
-                                            <groupId>${project.groupId}</groupId>
-                                            <artifactId>hibernate-search-build-config</artifactId>
-                                            <classifier>dependencies-javadoc-packagelists</classifier>
-                                            <type>zip</type>
-                                            <version>${project.version}</version>
-                                        </artifactItem>
-                                    </artifactItems>
-                                    <outputDirectory>${javadoc.packagelists.directory}</outputDirectory>
-                                    <overWriteSnapshots>true</overWriteSnapshots>
-                                </configuration>
-                            </execution>
-                        </executions>
-                        <dependencies>
-                            <!--
-                                This ensures that using mvn install -pl <some project> -am
-                                will correctly force the build of the build-config module.
-                             -->
-                            <dependency>
-                                <groupId>${project.groupId}</groupId>
-                                <artifactId>hibernate-search-build-config</artifactId>
-                                <classifier>dependencies-javadoc-packagelists</classifier>
-                                <type>zip</type>
-                                <version>${project.version}</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                    <plugin>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>generate-javadoc</id>
-                                <goals>
-                                    <goal>javadoc-no-fork</goal>
-                                </goals>
-                                <phase>prepare-package</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>jqassistant</id>
-            <build>
-                <plugins>
-                    <!--
-                         This is the last module: we want to execute analysis here so as to fail the build if anything is wrong.
-                         Reminder: jqassistant only executes analysis in the last module of the build,
-                         so if we skip it in the last module, it just won't execute analysis... ever.
-                     -->
-                    <plugin>
-                        <groupId>com.buschmais.jqassistant</groupId>
-                        <artifactId>jqassistant-maven-plugin</artifactId>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>release</id>
-            <activation>
-                <property>
-                    <name>performRelease</name>
-                    <value>true</value>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                                <configuration>
-                                    <homedir>${env.RELEASE_GPG_HOMEDIR}</homedir>
-                                    <passphrase>${env.RELEASE_GPG_PASSPHRASE}</passphrase>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
+      </build>
+    </profile>
+    <profile>
+      <id>jqassistant</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>com.buschmais.jqassistant</groupId>
+            <artifactId>jqassistant-maven-plugin</artifactId>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>release</id>
+      <activation>
+        <property>
+          <name>performRelease</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+                <configuration>
+                  <homedir>${env.RELEASE_GPG_HOMEDIR}</homedir>
+                  <passphrase>${env.RELEASE_GPG_PASSPHRASE}</passphrase>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
