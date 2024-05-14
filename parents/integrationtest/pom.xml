@@ -1,803 +1,368 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
- ~ Hibernate Search, full-text search for your domain model
- ~
- ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later
- ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
-  -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.hibernate.search</groupId>
-        <artifactId>hibernate-search-parent-internal</artifactId>
-        <version>6.1.7.Final</version>
-        <relativePath>../internal</relativePath>
-    </parent>
-    <artifactId>hibernate-search-parent-integrationtest</artifactId>
-    <packaging>pom</packaging>
-
-    <name>Hibernate Search Parent POM for Integration Test Artifacts</name>
-    <description>Common build configuration for all integration test artifacts (including documentation)</description>
-
-    <properties>
-        <!-- Apply the test JDK release settings to all code in integration tests, even code in src/main -->
-        <java-version.main.release>${java-version.test.release}</java-version.main.release>
-        <java-version.main.compiler.java_home>${java-version.test.compiler.java_home}</java-version.main.compiler.java_home>
-        <java-version.main.compiler>${java-version.test.compiler}</java-version.main.compiler>
-        <!--
-             Pass these properties as system properties to be able to switch to
-             a different database without re-compiling the hibernate.properties file
-             (which is located in a dependency of the integration tests modules)
-         -->
-        <failsafe.jvm.args.hibernate-orm>
-            -Dhibernate.dialect=${db.dialect}
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.hibernate.search</groupId>
+    <artifactId>hibernate-search-parent-internal</artifactId>
+    <version>6.1.7.Final</version>
+    <relativePath>../internal</relativePath>
+  </parent>
+  <artifactId>hibernate-search-parent-integrationtest</artifactId>
+  <packaging>pom</packaging>
+  <name>Hibernate Search Parent POM for Integration Test Artifacts</name>
+  <description>Common build configuration for all integration test artifacts (including documentation)</description>
+  <properties>
+    <java-version.main.compiler>${java-version.test.compiler}</java-version.main.compiler>
+    <java-version.main.release>${java-version.test.release}</java-version.main.release>
+    <java-version.main.compiler.java_home>${java-version.test.compiler.java_home}</java-version.main.compiler.java_home>
+    <failsafe.jvm.args.hibernate-orm>-Dhibernate.dialect=${db.dialect}
             -Dhibernate.connection.driver_class=${jdbc.driver}
             -Dhibernate.connection.url=${jdbc.url}
             -Dhibernate.connection.username=${jdbc.user}
             -Dhibernate.connection.password=${jdbc.pass}
-            -Dhibernate.connection.isolation=${jdbc.isolation}
-        </failsafe.jvm.args.hibernate-orm>
-
-        <!-- For some reason, the failsafe plugin uses the modulepath
-             even when we didn't define a module-info.java,
-             and many things fail because of the modulepath.
-             In particular, the backend TCK fails to retrieve TckBackendHelper,
-             and Spring Boot ITs fail to detect configuration defined in the main (non-test) code.
-             So, disable the modulepath explicitly. -->
-        <failsafe.useModulePath>false</failsafe.useModulePath>
-    </properties>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.hibernate.search</groupId>
-                <artifactId>hibernate-search-integrationtest-backend-tck</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <!-- JDBC drivers -->
-            <!-- Profile-specific driver, used in most database-sensitive integration tests -->
-            <dependency>
-                <groupId>${jdbc.driver.groupId}</groupId>
-                <artifactId>${jdbc.driver.artifactId}</artifactId>
-                <version>${jdbc.driver.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>io.fabric8</groupId>
-                    <artifactId>docker-maven-plugin</artifactId>
-                    <version>${version.docker.maven.plugin}</version>
-                    <configuration>
-                        <skip>${test.containers.run.skip}</skip>
-                        <startParallel>true</startParallel>
-                        <images>
-                            <image>
-                                <name>${test.elasticsearch.run.elastic.image.name}:${test.elasticsearch.run.elastic.image.tag}</name>
-                                <alias>elasticsearch</alias>
-                                <run>
-                                    <skip>${test.elasticsearch.run.elastic.skip}</skip>
-                                    <env>
-                                        <logger.level>WARN</logger.level>
-                                        <discovery.type>single-node</discovery.type>
-                                        <!-- fix Docker images for older versions -->
-                                        <!-- Older images require HTTP authentication for all requests;
-                                             it's not practical for testing, so we disable that.
-                                         -->
-                                        <xpack.security.enabled>false</xpack.security.enabled>
-                                        <!-- Limit the RAM usage.
-                                             Recent versions of ES limit themselves to 50% of the total available RAM,
-                                             but on CI this is sometimes too much, as we also have the Maven JVM
-                                             and the JVM that runs tests taking up a significant amount of RAM,
-                                             leaving too little for filesystem caches and resulting in freezes.
-                                         -->
-                                        <ES_JAVA_OPTS>-Xms1g -Xmx1g</ES_JAVA_OPTS>
-                                    </env>
-                                    <ports>
-                                        <port>9200:9200</port>
-                                    </ports>
-                                    <log>
-                                        <prefix>Elasticsearch: </prefix>
-                                        <date>default</date>
-                                        <color>cyan</color>
-                                    </log>
-                                    <wait>
-                                        <http>
-                                            <url>http://localhost:9200</url>
-                                            <method>GET</method>
-                                            <status>200</status>
-                                        </http>
-                                        <time>20000</time>
-                                    </wait>
-                                </run>
-                            </image>
-                            <image>
-                                <name>${test.elasticsearch.run.opensearch.image.name}:${test.elasticsearch.run.opensearch.image.tag}</name>
-                                <alias>opensearch</alias>
-                                <run>
-                                    <skip>${test.elasticsearch.run.opensearch.skip}</skip>
-                                    <env>
-                                        <logger.level>WARN</logger.level>
-                                        <discovery.type>single-node</discovery.type>
-                                        <!-- Prevent swapping, same as the Elasticsearch image above. -->
-                                        <bootstrap.memory_lock>true</bootstrap.memory_lock>
-                                        <!-- OpenSearch expects SSL and uses a self-signed certificate by default;
-                                             it's not practical for testing, so we disable that.
-                                         -->
-                                        <plugins.security.disabled>true</plugins.security.disabled>
-                                        <!-- ISM floods the logs with errors, and we don't need it.
-                                             See https://docs-beta.opensearch.org/im-plugin/ism/settings/
-                                         -->
-                                        <plugins.index_state_management.enabled>false</plugins.index_state_management.enabled>
-                                    </env>
-                                    <ports>
-                                        <port>9200:9200</port>
-                                    </ports>
-                                    <log>
-                                        <prefix>OpenSearch: </prefix>
-                                        <date>default</date>
-                                        <color>cyan</color>
-                                    </log>
-                                    <wait>
-                                        <http>
-                                            <url>http://localhost:9200</url>
-                                            <method>GET</method>
-                                            <status>200</status>
-                                        </http>
-                                        <time>20000</time>
-                                    </wait>
-                                </run>
-                            </image>
-                            <image>
-                                <name>${test.database.run.postgres.image.name}:${test.database.run.postgres.image.tag}</name>
-                                <alias>postgres</alias>
-                                <run>
-                                    <skip>${test.database.run.postgres.skip}</skip>
-                                    <env>
-                                        <POSTGRES_USER>hibernate_orm_test</POSTGRES_USER>
-                                        <POSTGRES_PASSWORD>hibernate_orm_test</POSTGRES_PASSWORD>
-                                        <POSTGRES_DB>hibernate_orm_test</POSTGRES_DB>
-                                    </env>
-                                    <ports>
-                                        <port>5432:5432</port>
-                                    </ports>
-                                    <log>
-                                        <prefix>PostgreSQL: </prefix>
-                                        <date>default</date>
-                                        <color>blue</color>
-                                    </log>
-                                    <wait>
-                                        <!-- For some reason, Postgres will tell us it's ready *twice*,
-                                             and that's the truth the second time only.
-                                             See https://github.com/fabric8io/docker-maven-plugin/issues/628 -->
-                                        <log>(?s)ready to accept connections.*ready to accept connections</log>
-                                    </wait>
-                                </run>
-                            </image>
-                            <image>
-                                <name>${test.database.run.mariadb.image.name}:${test.database.run.mariadb.image.tag}</name>
-                                <alias>mariadb</alias>
-                                <run>
-                                    <skip>${test.database.run.mariadb.skip}</skip>
-                                    <cmd>--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci</cmd>
-                                    <env>
-                                        <MYSQL_USER>hibernate_orm_test</MYSQL_USER>
-                                        <MYSQL_PASSWORD>hibernate_orm_test</MYSQL_PASSWORD>
-                                        <MYSQL_DATABASE>hibernate_orm_test</MYSQL_DATABASE>
-                                        <MYSQL_RANDOM_ROOT_PASSWORD>true</MYSQL_RANDOM_ROOT_PASSWORD>
-                                    </env>
-                                    <ports>
-                                        <port>3306:3306</port>
-                                    </ports>
-                                    <log>
-                                        <prefix>MariaDB: </prefix>
-                                        <date>default</date>
-                                        <color>blue</color>
-                                    </log>
-                                    <!-- Speed things up a bit by not actually flushing writes to disk -->
-                                    <tmpfs>/var/lib/mysql</tmpfs>
-                                    <wait>
-                                        <time>20000</time>
-                                        <exec>
-                                            <postStart>mysqladmin ping -h localhost -u hibernate_orm_test -phibernate_orm_test</postStart>
-                                        </exec>
-                                    </wait>
-                                </run>
-                            </image>
-                            <image>
-                                <name>${test.database.run.mysql.image.name}:${test.database.run.mysql.image.tag}</name>
-                                <alias>mysql</alias>
-                                <run>
-                                    <skip>${test.database.run.mysql.skip}</skip>
-                                    <env>
-                                        <MYSQL_USER>hibernate_orm_test</MYSQL_USER>
-                                        <MYSQL_PASSWORD>hibernate_orm_test</MYSQL_PASSWORD>
-                                        <MYSQL_DATABASE>hibernate_orm_test</MYSQL_DATABASE>
-                                        <MYSQL_RANDOM_ROOT_PASSWORD>true</MYSQL_RANDOM_ROOT_PASSWORD>
-                                    </env>
-                                    <ports>
-                                        <port>3306:3306</port>
-                                    </ports>
-                                    <log>
-                                        <prefix>MySQL:</prefix>
-                                        <date>default</date>
-                                        <color>blue</color>
-                                    </log>
-                                    <!-- Speed things up a bit by not actually flushing writes to disk -->
-                                    <tmpfs>/var/lib/mysql</tmpfs>
-                                    <wait>
-                                        <time>20000</time>
-                                        <exec>
-                                            <postStart>mysqladmin ping -h localhost -u hibernate_orm_test -phibernate_orm_test</postStart>
-                                        </exec>
-                                    </wait>
-                                </run>
-                            </image>
-                            <image>
-                                <name>${test.database.run.db2.image.name}:${test.database.run.db2.image.tag}</name>
-                                <alias>db2</alias>
-                                <run>
-                                    <skip>${test.database.run.db2.skip}</skip>
-                                    <env>
-                                        <DB2INSTANCE>hreact</DB2INSTANCE>
-                                        <DB2INST1_PASSWORD>hreact</DB2INST1_PASSWORD>
-                                        <DBNAME>hreact</DBNAME>
-                                        <LICENSE>accept</LICENSE>
-                                        <!-- These help the DB2 container start faster -->
-                                        <AUTOCONFIG>false</AUTOCONFIG>
-                                        <ARCHIVE_LOGS>false</ARCHIVE_LOGS>
-                                        <PERSISTENT_HOME>false</PERSISTENT_HOME>
-                                    </env>
-                                    <ports>
-                                        <port>50005:50000</port>
-                                    </ports>
-                                    <log>
-                                        <prefix>DB2:</prefix>
-                                        <date>default</date>
-                                        <color>blue</color>
-                                    </log>
-                                    <network>
-                                        <mode>bridge</mode>
-                                    </network>
-                                    <privileged>true</privileged>
-                                    <wait>
-                                        <!-- good docs found at: http://dmp.fabric8.io/#build-healthcheck -->
-                                        <log>.*INSTANCE.*</log>
-                                        <!-- Unfortunately booting DB2 is slow, needs to set a generous (15m) timeout;
-                                         it generally starts in 2-3 minutes, but it's been occasionally slightly above 10m -->
-                                        <time>900000</time>
-                                        <!-- Kill the container, if it doesn't stop before this given time
-                                         duration since a graceful stop was issued -->
-                                        <kill>300000</kill>
-                                    </wait>
-                                </run>
-                            </image>
-                            <image>
-                                <name>${test.database.run.oracle.image.name}:${test.database.run.oracle.image.tag}</name>
-                                <alias>oracle</alias>
-                                <run>
-                                    <skip>${test.database.run.oracle.skip}</skip>
-                                    <env>
-                                        <ORACLE_PASSWORD>hibernate_orm_test</ORACLE_PASSWORD>
-                                    </env>
-                                    <ports>
-                                        <port>1521:1521</port>
-                                    </ports>
-                                    <log>
-                                        <prefix>Oracle Database: </prefix>
-                                        <date>default</date>
-                                        <color>blue</color>
-                                    </log>
-                                    <wait>
-                                        <!-- good docs found at: http://dmp.fabric8.io/#build-healthcheck -->
-                                        <!-- Unfortunately booting this is slow, needs to set a generous timeout: -->
-                                        <time>60000</time>
-                                        <log>DATABASE IS READY TO USE!</log>
-                                    </wait>
-                                </run>
-                            </image>
-                            <image>
-                                <name>${test.database.run.mssql.image.name}:${test.database.run.mssql.image.tag}</name>
-                                <alias>mssql</alias>
-                                <run>
-                                    <skip>${test.database.run.mssql.skip}</skip>
-                                    <env>
-                                        <ACCEPT_EULA>Y</ACCEPT_EULA>
-                                        <SA_PASSWORD>ActuallyRequired11Complexity</SA_PASSWORD>
-                                    </env>
-                                    <ports>
-                                        <port>1433:1433</port>
-                                    </ports>
-                                    <log>
-                                        <prefix>MS SQL Server: </prefix>
-                                        <date>default</date>
-                                        <color>blue</color>
-                                    </log>
-                                    <wait>
-                                        <log>SQL Server is now ready for client connections</log>
-                                        <!-- Unfortunately booting this is slow, needs to set a generous timeout: -->
-                                        <time>40000</time>
-                                    </wait>
-                                </run>
-                            </image>
-                            <image>
-                                <name>${test.database.run.cockroachdb.image.name}:${test.database.run.cockroachdb.image.tag}</name>
-                                <alias>cockroachdb</alias>
-                                <run>
-                                    <skip>${test.database.run.cockroachdb.skip}</skip>
-                                    <cmd>
-                                        <exec>
-                                            <arg>start-single-node</arg>
-                                            <arg>--insecure</arg>
-                                        </exec>
-                                    </cmd>
-                                    <ulimits>
-                                        <ulimit>
-                                            <name>nofile</name>
-                                            <hard>1956</hard>
-                                            <soft>1956</soft>
-                                        </ulimit>
-                                    </ulimits>
-                                    <env>
-                                        <POSTGRES_USER>hibernate_orm_test</POSTGRES_USER>
-                                        <POSTGRES_PASSWORD>hibernate_orm_test</POSTGRES_PASSWORD>
-                                        <POSTGRES_DB>hibernate_orm_test</POSTGRES_DB>
-                                    </env>
-                                    <ports>
-                                        <port>26257:26257</port>
-                                    </ports>
-                                    <log>
-                                        <prefix>CockroachDB: </prefix>
-                                        <date>default</date>
-                                        <color>blue</color>
-                                    </log>
-                                    <wait>
-                                        <log>CockroachDB node starting at</log>
-                                    </wait>
-                                </run>
-                            </image>
-                        </images>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <id>docker-start</id>
-                            <phase>pre-integration-test</phase>
-                            <goals>
-                                <!-- Stops all images currently running before starting them again.
-                                     Useful to stop processes still running from a previously failed integration test run.
-                                     Because this is invoked before the start goal,
-                                     this will stop all images defined in the configuration, not just those we will start.
-                                     -->
-                                <goal>stop</goal>
-                                <goal>start</goal>
-                            </goals>
-                        </execution>
-                        <execution>
-                            <id>docker-stop</id>
-                            <phase>post-integration-test</phase>
-                            <goals>
-                                <goal>stop</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-    </build>
-
-    <profiles>
-        <!-- The profiles `skippingAllTests` and `skippingIntegrationTests` are currently duplicates,
-            as one can't trigger the profile activation on either/or property -->
-        <profile>
-            <id>skippingAllTests</id>
-            <activation>
-                <property>
-                    <name>skipTests</name>
-                </property>
-            </activation>
-            <properties>
-                <!-- This is to avoid starting containers for each module needing integration test -->
-                <test.containers.run.skip>true</test.containers.run.skip>
-            </properties>
-        </profile>
-        <profile>
-            <id>skippingIntegrationTests</id>
-            <activation>
-                <property>
-                    <name>skipITs</name>
-                </property>
-            </activation>
-            <properties>
-                <!-- This is to avoid starting containers for each module needing integration test -->
-                <test.containers.run.skip>true</test.containers.run.skip>
-            </properties>
-        </profile>
-
-        <!-- =============================== -->
-        <!-- Elasticsearch IT profiles       -->
-        <!-- =============================== -->
-        <!--
-             Different profiles are needed to handle the environment setup (which is handled in Maven,
-             on contrary to the various database profiles).
-
-             To run tests against a different version of Elasticsearch, see README.md.
-          -->
-
-        <!-- Profile enabled when an Elasticsearch instance must be run by Maven -->
-        <profile>
-            <id>elasticsearch-run</id>
-            <activation>
-                <!-- Activate by default, i.e. if test.elasticsearch.connection.uris has not been defined explicitly -->
-                <property>
-                    <name>!test.elasticsearch.connection.uris</name>
-                </property>
-            </activation>
-            <properties>
-                <test.elasticsearch.connection.uris>http://localhost:9200</test.elasticsearch.connection.uris>
-                <test.elasticsearch.connection.uris.defined>false</test.elasticsearch.connection.uris.defined>
-            </properties>
-        </profile>
-        <!-- Profile enabled when an Elasticsearch instance must NOT be run by Maven -->
-        <profile>
-            <id>elasticsearch-do-not-run</id>
-            <activation>
-                <!-- Activate if test.elasticsearch.connection.uris has been defined explicitly -->
-                <property>
-                    <name>test.elasticsearch.connection.uris</name>
-                </property>
-            </activation>
-            <properties>
-                <test.elasticsearch.connection.uris.defined>true</test.elasticsearch.connection.uris.defined>
-            </properties>
-        </profile>
-
-        <profile>
-            <id>aws</id>
-            <activation>
-                <property>
-                    <name>test.elasticsearch.connection.aws.signing.enabled</name>
-                    <value>true</value>
-                </property>
-            </activation>
-            <properties>
-                <!-- Tests may fail unexpectedly with AWS Elasticsearch.
-                     In particular, we sometimes get timeouts, seemingly for no particular reason.
-                     Thus we need to retry tests when they fail, to be sure it's not just a transient failure.
-                     Note that this will not re-run tests when they fail in @BeforeClass/@AfterClass in particular,
-                     so we also have retry steps in the Jenkinsfile.
-                 -->
-                <failsafe.rerunFailingTestsCount>4</failsafe.rerunFailingTestsCount>
-            </properties>
-        </profile>
-
-        <!-- Elasticsearch 5.6 test environment -->
-        <profile>
-            <id>elasticsearch-5.6</id>
-            <properties>
-                <test.elasticsearch.run.elastic.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.elastic.skip>
-                <test.elasticsearch.connection.distribution>elastic</test.elasticsearch.connection.distribution>
-                <test.elasticsearch.connection.version>${version.org.elasticsearch.latest-5.6}</test.elasticsearch.connection.version>
-                <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch5TestDialect</test.elasticsearch.testdialect>
-            </properties>
-        </profile>
-
-        <!-- Elasticsearch 6.0 to 6.2 test environment -->
-        <profile>
-            <id>elasticsearch-6.0</id>
-            <properties>
-                <test.elasticsearch.run.elastic.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.elastic.skip>
-                <test.elasticsearch.connection.distribution>elastic</test.elasticsearch.connection.distribution>
-                <test.elasticsearch.connection.version>${version.org.elasticsearch.latest-6.2}</test.elasticsearch.connection.version>
-                <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch60TestDialect</test.elasticsearch.testdialect>
-            </properties>
-        </profile>
-
-        <!-- Elasticsearch 6.3 test environment -->
-        <profile>
-            <id>elasticsearch-6.3</id>
-            <properties>
-                <test.elasticsearch.run.elastic.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.elastic.skip>
-                <test.elasticsearch.connection.distribution>elastic</test.elasticsearch.connection.distribution>
-                <test.elasticsearch.connection.version>${version.org.elasticsearch.latest-6.3}</test.elasticsearch.connection.version>
-                <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch63TestDialect</test.elasticsearch.testdialect>
-            </properties>
-        </profile>
-
-        <!-- Elasticsearch 6.4 to 6.6 test environment -->
-        <profile>
-            <id>elasticsearch-6.4</id>
-            <properties>
-                <test.elasticsearch.run.elastic.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.elastic.skip>
-                <test.elasticsearch.connection.distribution>elastic</test.elasticsearch.connection.distribution>
-                <test.elasticsearch.connection.version>${version.org.elasticsearch.latest-6.6}</test.elasticsearch.connection.version>
-                <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch64TestDialect</test.elasticsearch.testdialect>
-            </properties>
-        </profile>
-
-        <!-- Elasticsearch 6.7 test environment -->
-        <profile>
-            <id>elasticsearch-6.7</id>
-            <properties>
-                <test.elasticsearch.run.elastic.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.elastic.skip>
-                <test.elasticsearch.connection.distribution>elastic</test.elasticsearch.connection.distribution>
-                <test.elasticsearch.connection.version>${version.org.elasticsearch.latest-6.7}</test.elasticsearch.connection.version>
-                <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch67TestDialect</test.elasticsearch.testdialect>
-            </properties>
-        </profile>
-
-        <!-- Elasticsearch 6.8 test environment -->
-        <profile>
-            <id>elasticsearch-6.8</id>
-            <properties>
-                <test.elasticsearch.run.elastic.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.elastic.skip>
-                <test.elasticsearch.connection.distribution>elastic</test.elasticsearch.connection.distribution>
-                <test.elasticsearch.connection.version>${version.org.elasticsearch.latest-6.8}</test.elasticsearch.connection.version>
-                <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch68TestDialect</test.elasticsearch.testdialect>
-            </properties>
-        </profile>
-
-        <!-- Elasticsearch 7.0 to 7.2 test environment -->
-        <profile>
-            <id>elasticsearch-7.0</id>
-            <properties>
-                <test.elasticsearch.run.elastic.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.elastic.skip>
-                <test.elasticsearch.connection.distribution>elastic</test.elasticsearch.connection.distribution>
-                <test.elasticsearch.connection.version>${version.org.elasticsearch.latest-7.2}</test.elasticsearch.connection.version>
-                <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch70TestDialect</test.elasticsearch.testdialect>
-            </properties>
-        </profile>
-
-        <!-- Elasticsearch 7.3 to 7.6 test environment -->
-        <profile>
-            <id>elasticsearch-7.3</id>
-            <properties>
-                <test.elasticsearch.run.elastic.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.elastic.skip>
-                <test.elasticsearch.connection.distribution>elastic</test.elasticsearch.connection.distribution>
-                <test.elasticsearch.connection.version>${version.org.elasticsearch.latest-7.6}</test.elasticsearch.connection.version>
-                <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch73TestDialect</test.elasticsearch.testdialect>
-            </properties>
-        </profile>
-
-        <!-- Elasticsearch 7.7 test environment -->
-        <profile>
-            <id>elasticsearch-7.7</id>
-            <properties>
-                <test.elasticsearch.run.elastic.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.elastic.skip>
-                <test.elasticsearch.connection.distribution>elastic</test.elasticsearch.connection.distribution>
-                <test.elasticsearch.connection.version>${version.org.elasticsearch.latest-7.7}</test.elasticsearch.connection.version>
-                <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch77TestDialect</test.elasticsearch.testdialect>
-            </properties>
-        </profile>
-
-        <!-- Elasticsearch 7.8 to 7.9 test environment -->
-        <profile>
-            <id>elasticsearch-7.8</id>
-            <properties>
-                <test.elasticsearch.run.elastic.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.elastic.skip>
-                <test.elasticsearch.connection.distribution>elastic</test.elasticsearch.connection.distribution>
-                <test.elasticsearch.connection.version>${version.org.elasticsearch.latest-7.9}</test.elasticsearch.connection.version>
-                <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch78TestDialect</test.elasticsearch.testdialect>
-            </properties>
-        </profile>
-
-        <!-- Elasticsearch 7.10 test environment (default) -->
-        <profile>
-            <id>elasticsearch-7.10</id>
-            <properties>
-                <test.elasticsearch.run.elastic.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.elastic.skip>
-                <test.elasticsearch.connection.distribution>elastic</test.elasticsearch.connection.distribution>
-                <test.elasticsearch.connection.version>${version.org.elasticsearch.latest-7.10}</test.elasticsearch.connection.version>
-                <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch710TestDialect</test.elasticsearch.testdialect>
-            </properties>
-        </profile>
-
-        <!-- Elasticsearch 7.11 test environment -->
-        <profile>
-            <id>elasticsearch-7.11</id>
-            <properties>
-                <test.elasticsearch.run.elastic.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.elastic.skip>
-                <test.elasticsearch.connection.distribution>elastic</test.elasticsearch.connection.distribution>
-                <test.elasticsearch.connection.version>${version.org.elasticsearch.latest-7.11}</test.elasticsearch.connection.version>
-                <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch710TestDialect</test.elasticsearch.testdialect>
-            </properties>
-        </profile>
-
-        <!-- Elasticsearch 7.12+ test environment -->
-        <profile>
-            <id>elasticsearch-7.12</id>
-            <activation>
-                <!-- Activate by default, i.e. if test.elasticsearch.connection.version has not been defined explicitly -->
-                <property>
-                    <name>!test.elasticsearch.connection.version</name>
-                </property>
-            </activation>
-            <properties>
-                <test.elasticsearch.run.elastic.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.elastic.skip>
-                <test.elasticsearch.connection.distribution>elastic</test.elasticsearch.connection.distribution>
-                <test.elasticsearch.connection.version>${version.org.elasticsearch.latest-7.16}</test.elasticsearch.connection.version>
-                <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch712TestDialect</test.elasticsearch.testdialect>
-            </properties>
-        </profile>
-
-        <!-- OpenSearch 1.0+ test environment -->
-        <profile>
-            <id>opensearch-1.0</id>
-            <properties>
-                <test.elasticsearch.run.opensearch.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.opensearch.skip>
-                <test.elasticsearch.connection.distribution>opensearch</test.elasticsearch.connection.distribution>
-                <test.elasticsearch.connection.version>${version.org.opensearch.latest-1.0}</test.elasticsearch.connection.version>
-                <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch710TestDialect</test.elasticsearch.testdialect>
-            </properties>
-        </profile>
-
-        <!-- OpenSearch 1.2+ test environment -->
-        <profile>
-            <id>opensearch-1.2</id>
-            <properties>
-                <test.elasticsearch.run.opensearch.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.opensearch.skip>
-                <test.elasticsearch.connection.distribution>opensearch</test.elasticsearch.connection.distribution>
-                <test.elasticsearch.connection.version>${version.org.opensearch.latest-1.2}</test.elasticsearch.connection.version>
-                <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch710TestDialect</test.elasticsearch.testdialect>
-            </properties>
-        </profile>
-
-        <!-- =============================== -->
-        <!-- Database profiles               -->
-        <!-- =============================== -->
-        <!-- H2 is the default -->
-        <profile>
-            <id>h2</id>
-            <activation>
-                <property>
-                    <name>inMemoryTests</name>
-                    <value>!true</value>
-                </property>
-            </activation>
-            <properties>
-                <db.dialect>org.hibernate.dialect.H2Dialect</db.dialect>
-                <jdbc.driver.groupId>com.h2database</jdbc.driver.groupId>
-                <jdbc.driver.artifactId>h2</jdbc.driver.artifactId>
-                <jdbc.driver.version>${version.com.h2database}</jdbc.driver.version>
-                <jdbc.driver>org.h2.Driver</jdbc.driver>
-                <jdbc.url>jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1</jdbc.url>
-                <jdbc.user>sa</jdbc.user>
-                <jdbc.pass>sa</jdbc.pass>
-                <jdbc.isolation />
-            </properties>
-        </profile>
-
-        <!-- PostgreSQL Docker container for tests -->
-        <!-- See test.database.run.postgresql.image.tag for the server version in use -->
-        <profile>
-            <id>ci-postgresql</id>
-            <properties>
-                <test.database.run.postgres.skip>${test.database.run.skip}</test.database.run.postgres.skip>
-                <db.dialect>org.hibernate.dialect.PostgreSQL10Dialect</db.dialect>
-                <jdbc.driver.groupId>org.postgresql</jdbc.driver.groupId>
-                <jdbc.driver.artifactId>postgresql</jdbc.driver.artifactId>
-                <jdbc.driver.version>42.2.19</jdbc.driver.version>
-                <jdbc.driver>org.postgresql.Driver</jdbc.driver>
-                <jdbc.url>jdbc:postgresql://localhost:5432/hibernate_orm_test</jdbc.url>
-                <jdbc.user>hibernate_orm_test</jdbc.user>
-                <jdbc.pass>hibernate_orm_test</jdbc.pass>
-                <jdbc.isolation />
-            </properties>
-        </profile>
-
-        <!-- MariaDB Docker container for tests -->
-        <!-- See test.database.run.mariadb.image.tag for the server version in use -->
-        <profile>
-            <id>ci-mariadb</id>
-            <properties>
-                <test.database.run.mariadb.skip>${test.database.run.skip}</test.database.run.mariadb.skip>
-                <db.dialect>org.hibernate.dialect.MariaDB103Dialect</db.dialect>
-                <jdbc.driver.groupId>org.mariadb.jdbc</jdbc.driver.groupId>
-                <jdbc.driver.artifactId>mariadb-java-client</jdbc.driver.artifactId>
-                <jdbc.driver.version>2.2.4</jdbc.driver.version>
-                <jdbc.driver>org.mariadb.jdbc.Driver</jdbc.driver>
-                <jdbc.url>jdbc:mariadb://localhost/hibernate_orm_test</jdbc.url>
-                <jdbc.user>hibernate_orm_test</jdbc.user>
-                <jdbc.pass>hibernate_orm_test</jdbc.pass>
-                <jdbc.isolation />
-            </properties>
-        </profile>
-
-        <!-- MySQL Docker container for tests -->
-        <!-- See test.database.run.mysql.image.tag for the server version in use -->
-        <profile>
-            <id>ci-mysql</id>
-            <properties>
-                <test.database.run.mysql.skip>${test.database.run.skip}</test.database.run.mysql.skip>
-                <db.dialect>org.hibernate.dialect.MySQL8Dialect</db.dialect>
-                <jdbc.driver.groupId>mysql</jdbc.driver.groupId>
-                <jdbc.driver.artifactId>mysql-connector-java</jdbc.driver.artifactId>
-                <jdbc.driver.version>8.0.17</jdbc.driver.version>
-                <jdbc.driver>com.mysql.jdbc.Driver</jdbc.driver>
-                <jdbc.url>jdbc:mysql://localhost/hibernate_orm_test</jdbc.url>
-                <jdbc.user>hibernate_orm_test</jdbc.user>
-                <jdbc.pass>hibernate_orm_test</jdbc.pass>
-                <jdbc.isolation />
-            </properties>
-        </profile>
-
-        <!-- DB2 Docker container for tests -->
-        <!-- See test.database.run.db2.image.tag for the server version in use -->
-        <profile>
-            <id>ci-db2</id>
-            <properties>
-                <test.database.run.db2.skip>${test.database.run.skip}</test.database.run.db2.skip>
-                <db.dialect>org.hibernate.dialect.DB297Dialect</db.dialect>
-                <jdbc.driver.groupId>com.ibm.db2</jdbc.driver.groupId>
-                <jdbc.driver.artifactId>jcc</jdbc.driver.artifactId>
-                <jdbc.driver.version>11.5.5.0</jdbc.driver.version>
-                <jdbc.driver>com.ibm.db2.jcc.DB2Driver</jdbc.driver>
-                <jdbc.url>jdbc:db2://localhost:50005/hreact</jdbc.url>
-                <jdbc.user>hreact</jdbc.user>
-                <jdbc.pass>hreact</jdbc.pass>
-                <jdbc.isolation />
-            </properties>
-        </profile>
-
-        <!-- Oracle Docker container for tests -->
-        <!-- See test.database.run.oracle.image.tag for the server version in use -->
-        <profile>
-            <id>ci-oracle</id>
-            <properties>
-                <test.database.run.oracle.skip>${test.database.run.skip}</test.database.run.oracle.skip>
-                <db.dialect>org.hibernate.dialect.Oracle10gDialect</db.dialect>
-                <jdbc.driver.groupId>com.oracle.database.jdbc</jdbc.driver.groupId>
-                <jdbc.driver.artifactId>ojdbc8</jdbc.driver.artifactId>
-                <jdbc.driver.version>21.1.0.0</jdbc.driver.version>
-                <jdbc.driver>oracle.jdbc.OracleDriver</jdbc.driver>
-                <jdbc.url>jdbc:oracle:thin:@localhost:1521/XE</jdbc.url>
-                <jdbc.user>SYSTEM</jdbc.user>
-                <jdbc.pass>hibernate_orm_test</jdbc.pass>
-                <jdbc.isolation />
-                <!-- avoid `ORA-01882: timezone region not found` exception on CI -->
-                <failsafe.jvm.args.jdbc>-Doracle.jdbc.timezoneAsRegion=false</failsafe.jvm.args.jdbc>
-            </properties>
-        </profile>
-
-        <!-- SQL Server Docker container for tests -->
-        <!-- See test.database.run.mssql.image.tag for the server version in use -->
-        <profile>
-            <id>ci-mssql</id>
-            <properties>
-                <test.database.run.mssql.skip>${test.database.run.skip}</test.database.run.mssql.skip>
-                <db.dialect>org.hibernate.dialect.SQLServer2012Dialect</db.dialect>
-                <jdbc.driver.groupId>com.microsoft.sqlserver</jdbc.driver.groupId>
-                <jdbc.driver.artifactId>mssql-jdbc</jdbc.driver.artifactId>
-                <jdbc.driver.version>9.2.1.jre11</jdbc.driver.version>
-                <jdbc.driver>com.microsoft.sqlserver.jdbc.SQLServerDriver</jdbc.driver>
-                <jdbc.url>jdbc:sqlserver://localhost:1433;databaseName=tempdb</jdbc.url>
-                <jdbc.user>sa</jdbc.user>
-                <jdbc.pass>ActuallyRequired11Complexity</jdbc.pass>
-            </properties>
-        </profile>
-
-        <!-- CockroachDB Docker container for tests -->
-        <!-- See test.database.run.cockroachdb.image.tag for the server version in use -->
-        <profile>
-            <id>ci-cockroachdb</id>
-            <properties>
-                <test.database.run.cockroachdb.skip>${test.database.run.skip}</test.database.run.cockroachdb.skip>
-                <db.dialect>org.hibernate.dialect.CockroachDB201Dialect</db.dialect>
-                <!-- CockroachDB uses the same client protocol as PostgreSQL (pgwire), so the driver is the same. -->
-                <jdbc.driver.groupId>org.postgresql</jdbc.driver.groupId>
-                <jdbc.driver.artifactId>postgresql</jdbc.driver.artifactId>
-                <jdbc.driver.version>42.2.19</jdbc.driver.version>
-                <jdbc.driver>org.postgresql.Driver</jdbc.driver>
-                <jdbc.url>jdbc:postgresql://localhost:26257/defaultdb?sslmode=disable</jdbc.url>
-                <jdbc.user>root</jdbc.user>
-                <jdbc.pass></jdbc.pass>
-                <jdbc.isolation />
-            </properties>
-        </profile>
-    </profiles>
+            -Dhibernate.connection.isolation=${jdbc.isolation}</failsafe.jvm.args.hibernate-orm>
+    <failsafe.useModulePath>false</failsafe.useModulePath>
+  </properties>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.hibernate.search</groupId>
+        <artifactId>hibernate-search-integrationtest-backend-tck</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${jdbc.driver.groupId}</groupId>
+        <artifactId>${jdbc.driver.artifactId}</artifactId>
+        <version>${jdbc.driver.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <build>
+    <pluginManagement />
+  </build>
+  <profiles>
+    <profile>
+      <id>skippingAllTests</id>
+      <activation>
+        <property>
+          <name>skipTests</name>
+        </property>
+      </activation>
+      <properties>
+        <test.containers.run.skip>true</test.containers.run.skip>
+      </properties>
+    </profile>
+    <profile>
+      <id>skippingIntegrationTests</id>
+      <activation>
+        <property>
+          <name>skipITs</name>
+        </property>
+      </activation>
+      <properties>
+        <test.containers.run.skip>true</test.containers.run.skip>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-run</id>
+      <activation>
+        <property>
+          <name>!test.elasticsearch.connection.uris</name>
+        </property>
+      </activation>
+      <properties>
+        <test.elasticsearch.connection.uris>http://localhost:9200</test.elasticsearch.connection.uris>
+        <test.elasticsearch.connection.uris.defined>false</test.elasticsearch.connection.uris.defined>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-do-not-run</id>
+      <activation>
+        <property>
+          <name>test.elasticsearch.connection.uris</name>
+        </property>
+      </activation>
+      <properties>
+        <test.elasticsearch.connection.uris.defined>true</test.elasticsearch.connection.uris.defined>
+      </properties>
+    </profile>
+    <profile>
+      <id>aws</id>
+      <activation>
+        <property>
+          <name>test.elasticsearch.connection.aws.signing.enabled</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <properties>
+        <failsafe.rerunFailingTestsCount>4</failsafe.rerunFailingTestsCount>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-5.6</id>
+      <properties>
+        <test.elasticsearch.connection.distribution>elastic</test.elasticsearch.connection.distribution>
+        <test.elasticsearch.run.elastic.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.elastic.skip>
+        <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch5TestDialect</test.elasticsearch.testdialect>
+        <test.elasticsearch.connection.version>${version.org.elasticsearch.latest-5.6}</test.elasticsearch.connection.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-6.0</id>
+      <properties>
+        <test.elasticsearch.connection.distribution>elastic</test.elasticsearch.connection.distribution>
+        <test.elasticsearch.run.elastic.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.elastic.skip>
+        <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch60TestDialect</test.elasticsearch.testdialect>
+        <test.elasticsearch.connection.version>${version.org.elasticsearch.latest-6.2}</test.elasticsearch.connection.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-6.3</id>
+      <properties>
+        <test.elasticsearch.connection.distribution>elastic</test.elasticsearch.connection.distribution>
+        <test.elasticsearch.run.elastic.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.elastic.skip>
+        <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch63TestDialect</test.elasticsearch.testdialect>
+        <test.elasticsearch.connection.version>${version.org.elasticsearch.latest-6.3}</test.elasticsearch.connection.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-6.4</id>
+      <properties>
+        <test.elasticsearch.connection.distribution>elastic</test.elasticsearch.connection.distribution>
+        <test.elasticsearch.run.elastic.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.elastic.skip>
+        <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch64TestDialect</test.elasticsearch.testdialect>
+        <test.elasticsearch.connection.version>${version.org.elasticsearch.latest-6.6}</test.elasticsearch.connection.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-6.7</id>
+      <properties>
+        <test.elasticsearch.connection.distribution>elastic</test.elasticsearch.connection.distribution>
+        <test.elasticsearch.run.elastic.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.elastic.skip>
+        <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch67TestDialect</test.elasticsearch.testdialect>
+        <test.elasticsearch.connection.version>${version.org.elasticsearch.latest-6.7}</test.elasticsearch.connection.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-6.8</id>
+      <properties>
+        <test.elasticsearch.connection.distribution>elastic</test.elasticsearch.connection.distribution>
+        <test.elasticsearch.run.elastic.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.elastic.skip>
+        <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch68TestDialect</test.elasticsearch.testdialect>
+        <test.elasticsearch.connection.version>${version.org.elasticsearch.latest-6.8}</test.elasticsearch.connection.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-7.0</id>
+      <properties>
+        <test.elasticsearch.connection.distribution>elastic</test.elasticsearch.connection.distribution>
+        <test.elasticsearch.run.elastic.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.elastic.skip>
+        <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch70TestDialect</test.elasticsearch.testdialect>
+        <test.elasticsearch.connection.version>${version.org.elasticsearch.latest-7.2}</test.elasticsearch.connection.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-7.3</id>
+      <properties>
+        <test.elasticsearch.connection.distribution>elastic</test.elasticsearch.connection.distribution>
+        <test.elasticsearch.run.elastic.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.elastic.skip>
+        <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch73TestDialect</test.elasticsearch.testdialect>
+        <test.elasticsearch.connection.version>${version.org.elasticsearch.latest-7.6}</test.elasticsearch.connection.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-7.7</id>
+      <properties>
+        <test.elasticsearch.connection.distribution>elastic</test.elasticsearch.connection.distribution>
+        <test.elasticsearch.run.elastic.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.elastic.skip>
+        <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch77TestDialect</test.elasticsearch.testdialect>
+        <test.elasticsearch.connection.version>${version.org.elasticsearch.latest-7.7}</test.elasticsearch.connection.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-7.8</id>
+      <properties>
+        <test.elasticsearch.connection.distribution>elastic</test.elasticsearch.connection.distribution>
+        <test.elasticsearch.run.elastic.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.elastic.skip>
+        <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch78TestDialect</test.elasticsearch.testdialect>
+        <test.elasticsearch.connection.version>${version.org.elasticsearch.latest-7.9}</test.elasticsearch.connection.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-7.10</id>
+      <properties>
+        <test.elasticsearch.connection.distribution>elastic</test.elasticsearch.connection.distribution>
+        <test.elasticsearch.run.elastic.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.elastic.skip>
+        <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch710TestDialect</test.elasticsearch.testdialect>
+        <test.elasticsearch.connection.version>${version.org.elasticsearch.latest-7.10}</test.elasticsearch.connection.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-7.11</id>
+      <properties>
+        <test.elasticsearch.connection.distribution>elastic</test.elasticsearch.connection.distribution>
+        <test.elasticsearch.run.elastic.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.elastic.skip>
+        <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch710TestDialect</test.elasticsearch.testdialect>
+        <test.elasticsearch.connection.version>${version.org.elasticsearch.latest-7.11}</test.elasticsearch.connection.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-7.12</id>
+      <activation>
+        <property>
+          <name>!test.elasticsearch.connection.version</name>
+        </property>
+      </activation>
+      <properties>
+        <test.elasticsearch.connection.distribution>elastic</test.elasticsearch.connection.distribution>
+        <test.elasticsearch.run.elastic.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.elastic.skip>
+        <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch712TestDialect</test.elasticsearch.testdialect>
+        <test.elasticsearch.connection.version>${version.org.elasticsearch.latest-7.16}</test.elasticsearch.connection.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>opensearch-1.0</id>
+      <properties>
+        <test.elasticsearch.connection.distribution>opensearch</test.elasticsearch.connection.distribution>
+        <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch710TestDialect</test.elasticsearch.testdialect>
+        <test.elasticsearch.run.opensearch.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.opensearch.skip>
+        <test.elasticsearch.connection.version>${version.org.opensearch.latest-1.0}</test.elasticsearch.connection.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>opensearch-1.2</id>
+      <properties>
+        <test.elasticsearch.connection.distribution>opensearch</test.elasticsearch.connection.distribution>
+        <test.elasticsearch.testdialect>org.hibernate.search.util.impl.integrationtest.backend.elasticsearch.dialect.Elasticsearch710TestDialect</test.elasticsearch.testdialect>
+        <test.elasticsearch.run.opensearch.skip>${test.elasticsearch.run.skip}</test.elasticsearch.run.opensearch.skip>
+        <test.elasticsearch.connection.version>${version.org.opensearch.latest-1.2}</test.elasticsearch.connection.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>h2</id>
+      <activation>
+        <property>
+          <name>inMemoryTests</name>
+          <value>!true</value>
+        </property>
+      </activation>
+      <properties>
+        <jdbc.driver.artifactId>h2</jdbc.driver.artifactId>
+        <jdbc.driver.version>${version.com.h2database}</jdbc.driver.version>
+        <jdbc.user>sa</jdbc.user>
+        <jdbc.isolation></jdbc.isolation>
+        <db.dialect>org.hibernate.dialect.H2Dialect</db.dialect>
+        <jdbc.driver.groupId>com.h2database</jdbc.driver.groupId>
+        <jdbc.url>jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1</jdbc.url>
+        <jdbc.pass>sa</jdbc.pass>
+        <jdbc.driver>org.h2.Driver</jdbc.driver>
+      </properties>
+    </profile>
+    <profile>
+      <id>ci-postgresql</id>
+      <properties>
+        <jdbc.driver.artifactId>postgresql</jdbc.driver.artifactId>
+        <jdbc.driver.version>42.2.19</jdbc.driver.version>
+        <jdbc.user>hibernate_orm_test</jdbc.user>
+        <test.database.run.postgres.skip>${test.database.run.skip}</test.database.run.postgres.skip>
+        <jdbc.isolation></jdbc.isolation>
+        <db.dialect>org.hibernate.dialect.PostgreSQL10Dialect</db.dialect>
+        <jdbc.driver.groupId>org.postgresql</jdbc.driver.groupId>
+        <jdbc.url>jdbc:postgresql://localhost:5432/hibernate_orm_test</jdbc.url>
+        <jdbc.pass>hibernate_orm_test</jdbc.pass>
+        <jdbc.driver>org.postgresql.Driver</jdbc.driver>
+      </properties>
+    </profile>
+    <profile>
+      <id>ci-mariadb</id>
+      <properties>
+        <jdbc.driver.artifactId>mariadb-java-client</jdbc.driver.artifactId>
+        <jdbc.driver.version>2.2.4</jdbc.driver.version>
+        <jdbc.user>hibernate_orm_test</jdbc.user>
+        <jdbc.isolation></jdbc.isolation>
+        <db.dialect>org.hibernate.dialect.MariaDB103Dialect</db.dialect>
+        <jdbc.driver.groupId>org.mariadb.jdbc</jdbc.driver.groupId>
+        <test.database.run.mariadb.skip>${test.database.run.skip}</test.database.run.mariadb.skip>
+        <jdbc.url>jdbc:mariadb://localhost/hibernate_orm_test</jdbc.url>
+        <jdbc.pass>hibernate_orm_test</jdbc.pass>
+        <jdbc.driver>org.mariadb.jdbc.Driver</jdbc.driver>
+      </properties>
+    </profile>
+    <profile>
+      <id>ci-mysql</id>
+      <properties>
+        <test.database.run.mysql.skip>${test.database.run.skip}</test.database.run.mysql.skip>
+        <jdbc.driver.artifactId>mysql-connector-java</jdbc.driver.artifactId>
+        <jdbc.driver.version>8.0.17</jdbc.driver.version>
+        <jdbc.user>hibernate_orm_test</jdbc.user>
+        <jdbc.isolation></jdbc.isolation>
+        <db.dialect>org.hibernate.dialect.MySQL8Dialect</db.dialect>
+        <jdbc.driver.groupId>mysql</jdbc.driver.groupId>
+        <jdbc.url>jdbc:mysql://localhost/hibernate_orm_test</jdbc.url>
+        <jdbc.pass>hibernate_orm_test</jdbc.pass>
+        <jdbc.driver>com.mysql.jdbc.Driver</jdbc.driver>
+      </properties>
+    </profile>
+    <profile>
+      <id>ci-db2</id>
+      <properties>
+        <jdbc.driver.artifactId>jcc</jdbc.driver.artifactId>
+        <jdbc.driver.version>11.5.5.0</jdbc.driver.version>
+        <jdbc.user>hreact</jdbc.user>
+        <test.database.run.db2.skip>${test.database.run.skip}</test.database.run.db2.skip>
+        <jdbc.isolation></jdbc.isolation>
+        <db.dialect>org.hibernate.dialect.DB297Dialect</db.dialect>
+        <jdbc.driver.groupId>com.ibm.db2</jdbc.driver.groupId>
+        <jdbc.url>jdbc:db2://localhost:50005/hreact</jdbc.url>
+        <jdbc.pass>hreact</jdbc.pass>
+        <jdbc.driver>com.ibm.db2.jcc.DB2Driver</jdbc.driver>
+      </properties>
+    </profile>
+    <profile>
+      <id>ci-oracle</id>
+      <properties>
+        <jdbc.driver.artifactId>ojdbc8</jdbc.driver.artifactId>
+        <jdbc.driver.version>21.1.0.0</jdbc.driver.version>
+        <jdbc.user>SYSTEM</jdbc.user>
+        <jdbc.isolation></jdbc.isolation>
+        <db.dialect>org.hibernate.dialect.Oracle10gDialect</db.dialect>
+        <jdbc.driver.groupId>com.oracle.database.jdbc</jdbc.driver.groupId>
+        <jdbc.url>jdbc:oracle:thin:@localhost:1521/XE</jdbc.url>
+        <failsafe.jvm.args.jdbc>-Doracle.jdbc.timezoneAsRegion=false</failsafe.jvm.args.jdbc>
+        <test.database.run.oracle.skip>${test.database.run.skip}</test.database.run.oracle.skip>
+        <jdbc.pass>hibernate_orm_test</jdbc.pass>
+        <jdbc.driver>oracle.jdbc.OracleDriver</jdbc.driver>
+      </properties>
+    </profile>
+    <profile>
+      <id>ci-mssql</id>
+      <properties>
+        <jdbc.driver.artifactId>mssql-jdbc</jdbc.driver.artifactId>
+        <jdbc.driver.version>9.2.1.jre11</jdbc.driver.version>
+        <jdbc.user>sa</jdbc.user>
+        <test.database.run.mssql.skip>${test.database.run.skip}</test.database.run.mssql.skip>
+        <db.dialect>org.hibernate.dialect.SQLServer2012Dialect</db.dialect>
+        <jdbc.driver.groupId>com.microsoft.sqlserver</jdbc.driver.groupId>
+        <jdbc.url>jdbc:sqlserver://localhost:1433;databaseName=tempdb</jdbc.url>
+        <jdbc.pass>ActuallyRequired11Complexity</jdbc.pass>
+        <jdbc.driver>com.microsoft.sqlserver.jdbc.SQLServerDriver</jdbc.driver>
+      </properties>
+    </profile>
+    <profile>
+      <id>ci-cockroachdb</id>
+      <properties>
+        <test.database.run.cockroachdb.skip>${test.database.run.skip}</test.database.run.cockroachdb.skip>
+        <jdbc.driver.artifactId>postgresql</jdbc.driver.artifactId>
+        <jdbc.driver.version>42.2.19</jdbc.driver.version>
+        <jdbc.user>root</jdbc.user>
+        <jdbc.isolation></jdbc.isolation>
+        <db.dialect>org.hibernate.dialect.CockroachDB201Dialect</db.dialect>
+        <jdbc.driver.groupId>org.postgresql</jdbc.driver.groupId>
+        <jdbc.url>jdbc:postgresql://localhost:26257/defaultdb?sslmode=disable</jdbc.url>
+        <jdbc.pass></jdbc.pass>
+        <jdbc.driver>org.postgresql.Driver</jdbc.driver>
+      </properties>
+    </profile>
+  </profiles>
 </project>
-

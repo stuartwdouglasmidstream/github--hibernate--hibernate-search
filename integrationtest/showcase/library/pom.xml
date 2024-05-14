@@ -1,195 +1,149 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.hibernate.search</groupId>
-        <artifactId>hibernate-search-integrationtest</artifactId>
-        <version>6.1.7.Final</version>
-        <relativePath>../..</relativePath>
-    </parent>
-    <artifactId>hibernate-search-integrationtest-showcase-library</artifactId>
-
-    <name>Hibernate Search ITs - Showcase - Library</name>
-    <description>Hibernate Search showcase based on the ORM and Elasticsearch integrations, using libraries and books as business objects</description>
-
-    <properties>
-        <test.elasticsearch.run.skip>${test.elasticsearch.connection.uris.defined}</test.elasticsearch.run.skip>
-        <test.database.run.skip>false</test.database.run.skip>
-        <!--
-            Remove Hibernate system properties from parent settings:
-            They are supposed to be handled by the spring.datasource subsystem
-            and not by the Hibernate internal pool!
-            See also the failsafe configuration.
-         -->
-        <failsafe.jvm.args.hibernate-orm></failsafe.jvm.args.hibernate-orm>
-    </properties>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>${version.org.springframework.boot}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <!-- The Spring BOM uses a version of bytebuddy that's too old for Mockito to work correctly -->
-            <dependency>
-                <groupId>net.bytebuddy</groupId>
-                <artifactId>byte-buddy</artifactId>
-                <version>${version.net.bytebuddy}</version>
-            </dependency>
-            <dependency>
-                <groupId>net.bytebuddy</groupId>
-                <artifactId>byte-buddy-agent</artifactId>
-                <version>${version.net.bytebuddy}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
+<?xml version="1.0"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.hibernate.search</groupId>
+    <artifactId>hibernate-search-integrationtest</artifactId>
+    <version>6.1.7.Final</version>
+    <relativePath>../..</relativePath>
+  </parent>
+  <artifactId>hibernate-search-integrationtest-showcase-library</artifactId>
+  <name>Hibernate Search ITs - Showcase - Library</name>
+  <description>Hibernate Search showcase based on the ORM and Elasticsearch integrations, using libraries and books as business objects</description>
+  <properties>
+    <test.elasticsearch.run.skip>${test.elasticsearch.connection.uris.defined}</test.elasticsearch.run.skip>
+    <test.database.run.skip>false</test.database.run.skip>
+    <failsafe.jvm.args.hibernate-orm></failsafe.jvm.args.hibernate-orm>
+  </properties>
+  <dependencyManagement>
     <dependencies>
-        <dependency>
-            <groupId>org.hibernate.search</groupId>
-            <artifactId>hibernate-search-mapper-orm</artifactId>
-        </dependency>
-        <!-- Only necessary when using the Lucene backend -->
-        <dependency>
-            <groupId>org.hibernate.search</groupId>
-            <artifactId>hibernate-search-backend-lucene</artifactId>
-        </dependency>
-        <!-- Only necessary when using the Elasticsearch backend -->
-        <dependency>
-            <groupId>org.hibernate.search</groupId>
-            <artifactId>hibernate-search-backend-elasticsearch</artifactId>
-        </dependency>
-        <!-- Only necessary when targeting an Elasticsearch service provided by AWS -->
-        <dependency>
-            <groupId>org.hibernate.search</groupId>
-            <artifactId>hibernate-search-backend-elasticsearch-aws</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
-            <exclusions>
-                <!-- Using JBoss Logging -->
-                <exclusion>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.hibernate.search</groupId>
-            <artifactId>hibernate-search-util-internal-integrationtest-mapper-orm</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <!--
-            Leave this dependency here, not in a utils module, so that we don't need to recompile
-            the utils to re-run the tests with a different database.
-         -->
-        <dependency>
-            <groupId>${jdbc.driver.groupId}</groupId>
-            <artifactId>${jdbc.driver.artifactId}</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-            <exclusions>
-                <!-- Using JBoss Logging -->
-                <exclusion>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>${version.org.springframework.boot}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>net.bytebuddy</groupId>
+        <artifactId>byte-buddy</artifactId>
+        <version>${version.net.bytebuddy}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.bytebuddy</groupId>
+        <artifactId>byte-buddy-agent</artifactId>
+        <version>${version.net.bytebuddy}</version>
+      </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <configuration>
-                    <skip>${failsafe.spring.skip}</skip>
-                    <!--
-                        Since we do not pass the Hibernate ORM settings through system properties directly
-                        (see the override of the failsafe.jvm.args.hibernate-orm near the top of this file),
-                        we need to pass the settings some other way.
-                        Here we chose to use environment variables.
-                     -->
-                    <environmentVariables>
-                        <HIBERNATE_DIALECT>${db.dialect}</HIBERNATE_DIALECT>
-                        <JDBC_DRIVER>${jdbc.driver}</JDBC_DRIVER>
-                        <JDBC_URL>${jdbc.url}</JDBC_URL>
-                        <JDBC_USERNAME>${jdbc.user}</JDBC_USERNAME>
-                        <JDBC_PASSWORD>${jdbc.pass}</JDBC_PASSWORD>
-                        <JDBC_ISOLATION>${jdbc.isolation}</JDBC_ISOLATION>
-                        <ELASTICSEARCH_URIS>${test.elasticsearch.connection.uris}</ELASTICSEARCH_URIS>
-                        <ELASTICSEARCH_USERNAME>${test.elasticsearch.connection.username}</ELASTICSEARCH_USERNAME>
-                        <ELASTICSEARCH_PASSWORD>${test.elasticsearch.connection.password}</ELASTICSEARCH_PASSWORD>
-                        <ELASTICSEARCH_AWS_SIGNING_ENABLED>${test.elasticsearch.connection.aws.signing.enabled}</ELASTICSEARCH_AWS_SIGNING_ENABLED>
-                        <ELASTICSEARCH_AWS_REGION>${test.elasticsearch.connection.aws.region}</ELASTICSEARCH_AWS_REGION>
-                        <ELASTICSEARCH_AWS_CREDENTIALS_TYPE>${test.elasticsearch.connection.aws.credentials.type}</ELASTICSEARCH_AWS_CREDENTIALS_TYPE>
-                        <ELASTICSEARCH_AWS_CREDENTIALS_ACCESS_KEY_ID>${test.elasticsearch.connection.aws.credentials.access_key_id}</ELASTICSEARCH_AWS_CREDENTIALS_ACCESS_KEY_ID>
-                        <ELASTICSEARCH_AWS_CREDENTIALS_SECRET_ACCESS_KEY>${test.elasticsearch.connection.aws.credentials.secret_access_key}</ELASTICSEARCH_AWS_CREDENTIALS_SECRET_ACCESS_KEY>
-                        <!--
-                             The test settings add a different suffix to this value for each test execution.
-                             We can't add this suffix (${random.uuid}) here due to IDEA limitations:
-                             IDEA just ignores this environment variable if it finds a reference to an unknown property
-                             such as "${random.uuid}".
-                         -->
-                        <LUCENE_ROOT_PATH>${project.build.directory}/test-indexes/</LUCENE_ROOT_PATH>
-                    </environmentVariables>
-                </configuration>
-
-                <executions>
-                    <execution>
-                        <id>it-lucene</id>
-                        <goals>
-                            <goal>integration-test</goal>
-                        </goals>
-                        <configuration>
-                            <reportNameSuffix>${surefire.reportNameSuffix}-lucene</reportNameSuffix>
-                            <systemPropertyVariables>
-                                <!-- See TestActiveProfilesResolver -->
-                                <test.backend>lucene</test.backend>
-                            </systemPropertyVariables>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>it-elasticsearch</id>
-                        <goals>
-                            <goal>integration-test</goal>
-                        </goals>
-                        <configuration>
-                            <reportNameSuffix>${surefire.reportNameSuffix}-elasticsearch</reportNameSuffix>
-                            <systemPropertyVariables>
-                                <!-- See TestActiveProfilesResolver -->
-                                <test.backend>elasticsearch</test.backend>
-                            </systemPropertyVariables>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>it-verify</id>
-                        <goals>
-                            <goal>verify</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>io.fabric8</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
-
+  </dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.hibernate.search</groupId>
+      <artifactId>hibernate-search-mapper-orm</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate.search</groupId>
+      <artifactId>hibernate-search-backend-lucene</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate.search</groupId>
+      <artifactId>hibernate-search-backend-elasticsearch</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate.search</groupId>
+      <artifactId>hibernate-search-backend-elasticsearch-aws</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-logging</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate.search</groupId>
+      <artifactId>hibernate-search-util-internal-integrationtest-mapper-orm</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>${jdbc.driver.groupId}</groupId>
+      <artifactId>${jdbc.driver.artifactId}</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-logging</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>it-lucene</id>
+            <goals>
+              <goal>integration-test</goal>
+            </goals>
+            <configuration>
+              <reportNameSuffix>${surefire.reportNameSuffix}-lucene</reportNameSuffix>
+              <systemPropertyVariables>
+                <test.backend>lucene</test.backend>
+              </systemPropertyVariables>
+            </configuration>
+          </execution>
+          <execution>
+            <id>it-elasticsearch</id>
+            <goals>
+              <goal>integration-test</goal>
+            </goals>
+            <configuration>
+              <reportNameSuffix>${surefire.reportNameSuffix}-elasticsearch</reportNameSuffix>
+              <systemPropertyVariables>
+                <test.backend>elasticsearch</test.backend>
+              </systemPropertyVariables>
+            </configuration>
+          </execution>
+          <execution>
+            <id>it-verify</id>
+            <goals>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <skip>${failsafe.spring.skip}</skip>
+          <environmentVariables>
+            <HIBERNATE_DIALECT>${db.dialect}</HIBERNATE_DIALECT>
+            <JDBC_DRIVER>${jdbc.driver}</JDBC_DRIVER>
+            <JDBC_URL>${jdbc.url}</JDBC_URL>
+            <JDBC_USERNAME>${jdbc.user}</JDBC_USERNAME>
+            <JDBC_PASSWORD>${jdbc.pass}</JDBC_PASSWORD>
+            <JDBC_ISOLATION>${jdbc.isolation}</JDBC_ISOLATION>
+            <ELASTICSEARCH_URIS>${test.elasticsearch.connection.uris}</ELASTICSEARCH_URIS>
+            <ELASTICSEARCH_USERNAME>${test.elasticsearch.connection.username}</ELASTICSEARCH_USERNAME>
+            <ELASTICSEARCH_PASSWORD>${test.elasticsearch.connection.password}</ELASTICSEARCH_PASSWORD>
+            <ELASTICSEARCH_AWS_SIGNING_ENABLED>${test.elasticsearch.connection.aws.signing.enabled}</ELASTICSEARCH_AWS_SIGNING_ENABLED>
+            <ELASTICSEARCH_AWS_REGION>${test.elasticsearch.connection.aws.region}</ELASTICSEARCH_AWS_REGION>
+            <ELASTICSEARCH_AWS_CREDENTIALS_TYPE>${test.elasticsearch.connection.aws.credentials.type}</ELASTICSEARCH_AWS_CREDENTIALS_TYPE>
+            <ELASTICSEARCH_AWS_CREDENTIALS_ACCESS_KEY_ID>${test.elasticsearch.connection.aws.credentials.access_key_id}</ELASTICSEARCH_AWS_CREDENTIALS_ACCESS_KEY_ID>
+            <ELASTICSEARCH_AWS_CREDENTIALS_SECRET_ACCESS_KEY>${test.elasticsearch.connection.aws.credentials.secret_access_key}</ELASTICSEARCH_AWS_CREDENTIALS_SECRET_ACCESS_KEY>
+            <LUCENE_ROOT_PATH>${project.build.directory}/test-indexes/</LUCENE_ROOT_PATH>
+          </environmentVariables>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
-
