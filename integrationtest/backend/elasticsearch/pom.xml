@@ -1,281 +1,198 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.hibernate.search</groupId>
-        <artifactId>hibernate-search-integrationtest</artifactId>
-        <version>6.1.7.Final</version>
-        <relativePath>../..</relativePath>
-    </parent>
-    <artifactId>hibernate-search-integrationtest-backend-elasticsearch</artifactId>
-
-    <name>Hibernate Search ITs - Backend - Elasticsearch</name>
-    <description>Hibernate Search integration tests for the Elasticsearch backend, running the Backend TCK in particular</description>
-
-    <properties>
-        <surefire.module>elasticsearch</surefire.module>
-
-        <test.elasticsearch.run.skip>${test.elasticsearch.connection.uris.defined}</test.elasticsearch.run.skip>
-
-        <!-- By default we don't exclude tests because of the version, but profiles override this -->
-        <failsafe.excludedGroups.elasticsearch.version />
-        <!-- By default AWS is not enabled, which means we need to exclude these categories -->
-        <failsafe.excludedGroups.elasticsearch.aws>
-            org.hibernate.search.integrationtest.backend.elasticsearch.testsupport.categories.RequiresRequestPostProcessing
-        </failsafe.excludedGroups.elasticsearch.aws>
-    </properties>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.hibernate.search</groupId>
-            <artifactId>hibernate-search-backend-elasticsearch</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.hibernate.search</groupId>
-            <artifactId>hibernate-search-integrationtest-backend-tck</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate.search</groupId>
-            <artifactId>hibernate-search-util-internal-integrationtest-common</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate.search</groupId>
-            <artifactId>hibernate-search-util-internal-integrationtest-backend-elasticsearch</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.takari.junit</groupId>
-            <artifactId>takari-cpsuite</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock</artifactId>
-            <scope>test</scope>
-            <exclusions>
-                <!-- Exclude dependencies that conflict with the ES Rest client -->
-                <exclusion>
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>httpclient</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-    </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>it</id>
-                        <goals>
-                            <goal>integration-test</goal>
-                            <goal>verify</goal>
-                        </goals>
-                        <configuration>
-                            <!-- WARNING: When using <dependenciesToScan>, be sure to set the Maven property surefire.module -->
-                            <dependenciesToScan>
-                                <dependency>${project.groupId}:hibernate-search-integrationtest-backend-tck</dependency>
-                            </dependenciesToScan>
-                            <!-- Note trailing commas are ignored. -->
-                            <excludedGroups>
-                                ${failsafe.excludedGroups.elasticsearch.aws}
-                                ${failsafe.excludedGroups.elasticsearch.version}
-                            </excludedGroups>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>io.fabric8</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
-
-    <profiles>
-        <profile>
-            <id>aws</id>
-            <activation>
-                <property>
-                    <name>test.elasticsearch.connection.aws.signing.enabled</name>
-                    <value>true</value>
-                </property>
-            </activation>
-            <properties>
-                <failsafe.excludedGroups.elasticsearch.aws>
-                    org.hibernate.search.integrationtest.backend.elasticsearch.testsupport.categories.RequiresIndexOpenClose,
+<?xml version="1.0"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.hibernate.search</groupId>
+    <artifactId>hibernate-search-integrationtest</artifactId>
+    <version>6.1.7.Final</version>
+    <relativePath>../..</relativePath>
+  </parent>
+  <artifactId>hibernate-search-integrationtest-backend-elasticsearch</artifactId>
+  <name>Hibernate Search ITs - Backend - Elasticsearch</name>
+  <description>Hibernate Search integration tests for the Elasticsearch backend, running the Backend TCK in particular</description>
+  <properties>
+    <test.elasticsearch.run.skip>${test.elasticsearch.connection.uris.defined}</test.elasticsearch.run.skip>
+    <failsafe.excludedGroups.elasticsearch.aws>org.hibernate.search.integrationtest.backend.elasticsearch.testsupport.categories.RequiresRequestPostProcessing</failsafe.excludedGroups.elasticsearch.aws>
+    <surefire.module>elasticsearch</surefire.module>
+    <failsafe.excludedGroups.elasticsearch.version></failsafe.excludedGroups.elasticsearch.version>
+  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>org.hibernate.search</groupId>
+      <artifactId>hibernate-search-backend-elasticsearch</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate.search</groupId>
+      <artifactId>hibernate-search-integrationtest-backend-tck</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate.search</groupId>
+      <artifactId>hibernate-search-util-internal-integrationtest-common</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate.search</groupId>
+      <artifactId>hibernate-search-util-internal-integrationtest-backend-elasticsearch</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.takari.junit</groupId>
+      <artifactId>takari-cpsuite</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.github.tomakehurst</groupId>
+      <artifactId>wiremock</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.httpcomponents</groupId>
+          <artifactId>httpclient</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>it</id>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+            <configuration>
+              <dependenciesToScan>
+                <dependency>${project.groupId}:hibernate-search-integrationtest-backend-tck</dependency>
+              </dependenciesToScan>
+              <excludedGroups>${failsafe.excludedGroups.elasticsearch.aws}
+                                ${failsafe.excludedGroups.elasticsearch.version}</excludedGroups>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  <profiles>
+    <profile>
+      <id>aws</id>
+      <activation>
+        <property>
+          <name>test.elasticsearch.connection.aws.signing.enabled</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <properties>
+        <failsafe.excludedGroups.elasticsearch.aws>org.hibernate.search.integrationtest.backend.elasticsearch.testsupport.categories.RequiresIndexOpenClose,
                     org.hibernate.search.integrationtest.backend.elasticsearch.testsupport.categories.RequiresNoRequestPostProcessing,
-                    org.hibernate.search.integrationtest.backend.elasticsearch.testsupport.categories.RequiresNoAutomaticAuthenticationHeader
-                </failsafe.excludedGroups.elasticsearch.aws>
-                <test.elasticsearch.connection.aws.signing.enabled>true</test.elasticsearch.connection.aws.signing.enabled>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.hibernate.search</groupId>
-                    <artifactId>hibernate-search-backend-elasticsearch-aws</artifactId>
-                    <scope>test</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-
-        <!-- Elasticsearch 5.6 test environment -->
-        <profile>
-            <id>elasticsearch-5.6</id>
-            <properties>
-                <failsafe.excludedGroups.elasticsearch.version>
-                    ,
+                    org.hibernate.search.integrationtest.backend.elasticsearch.testsupport.categories.RequiresNoAutomaticAuthenticationHeader</failsafe.excludedGroups.elasticsearch.aws>
+        <test.elasticsearch.connection.aws.signing.enabled>true</test.elasticsearch.connection.aws.signing.enabled>
+      </properties>
+      <dependencies>
+        <dependency>
+          <groupId>org.hibernate.search</groupId>
+          <artifactId>hibernate-search-backend-elasticsearch-aws</artifactId>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+    <profile>
+      <id>elasticsearch-5.6</id>
+      <properties>
+        <failsafe.excludedGroups.elasticsearch.version>,
                     org.hibernate.search.integrationtest.backend.elasticsearch.testsupport.categories.RequiresIndexAliasIsWriteIndex,
-                    org.hibernate.search.integrationtest.backend.elasticsearch.testsupport.categories.RequiresSingleModelDialectForMajorVersion
-                </failsafe.excludedGroups.elasticsearch.version>
-            </properties>
-        </profile>
-
-        <!-- Elasticsearch 6.0 to 6.2 test environment -->
-        <profile>
-            <id>elasticsearch-6.0</id>
-            <properties>
-                <failsafe.excludedGroups.elasticsearch.version>
-                    ,
-                    org.hibernate.search.integrationtest.backend.elasticsearch.testsupport.categories.RequiresIndexAliasIsWriteIndex
-                </failsafe.excludedGroups.elasticsearch.version>
-            </properties>
-        </profile>
-
-        <!-- Elasticsearch 6.3 test environment -->
-        <profile>
-            <id>elasticsearch-6.3</id>
-            <properties>
-                <failsafe.excludedGroups.elasticsearch.version>
-                    ,
-                    org.hibernate.search.integrationtest.backend.elasticsearch.testsupport.categories.RequiresIndexAliasIsWriteIndex
-                </failsafe.excludedGroups.elasticsearch.version>
-            </properties>
-        </profile>
-
-        <!-- Elasticsearch 6.4 to 6.6 test environment -->
-        <profile>
-            <id>elasticsearch-6.4</id>
-            <properties>
-                <failsafe.excludedGroups.elasticsearch.version>
-                    <!-- Nothing here -->
-                </failsafe.excludedGroups.elasticsearch.version>
-            </properties>
-        </profile>
-
-        <!-- Elasticsearch 6.7 test environment -->
-        <profile>
-            <id>elasticsearch-6.7</id>
-            <properties>
-                <failsafe.excludedGroups.elasticsearch.version>
-                    <!-- Nothing here -->
-                </failsafe.excludedGroups.elasticsearch.version>
-            </properties>
-        </profile>
-
-        <!-- Elasticsearch 6.8 test environment -->
-        <profile>
-            <id>elasticsearch-6.8</id>
-            <properties>
-                <failsafe.excludedGroups.elasticsearch.version>
-                    <!-- Nothing here -->
-                </failsafe.excludedGroups.elasticsearch.version>
-            </properties>
-        </profile>
-
-        <!-- Elasticsearch 7.0 to 7.2 test environment -->
-        <profile>
-            <id>elasticsearch-7.0</id>
-            <properties>
-                <failsafe.excludedGroups.elasticsearch.version>
-                    <!-- Nothing here -->
-                </failsafe.excludedGroups.elasticsearch.version>
-            </properties>
-        </profile>
-
-        <!-- Elasticsearch 7.3 to 7.6 test environment -->
-        <profile>
-            <id>elasticsearch-7.3</id>
-            <properties>
-                <failsafe.excludedGroups.elasticsearch.version>
-                    <!-- Nothing here -->
-                </failsafe.excludedGroups.elasticsearch.version>
-            </properties>
-        </profile>
-
-        <!-- Elasticsearch 7.7 test environment -->
-        <profile>
-            <id>elasticsearch-7.7</id>
-            <properties>
-                <failsafe.excludedGroups.elasticsearch.version>
-                    <!-- Nothing here -->
-                </failsafe.excludedGroups.elasticsearch.version>
-            </properties>
-        </profile>
-
-        <!-- Elasticsearch 7.8 to 7.9 test environment -->
-        <profile>
-            <id>elasticsearch-7.8</id>
-            <properties>
-                <failsafe.excludedGroups.elasticsearch.version>
-                    <!-- Nothing here -->
-                </failsafe.excludedGroups.elasticsearch.version>
-            </properties>
-        </profile>
-
-        <!-- Elasticsearch 7.10 test environment (default) -->
-        <profile>
-            <id>elasticsearch-7.10</id>
-            <properties>
-                <failsafe.excludedGroups.elasticsearch.version>
-                    <!-- Nothing here -->
-                </failsafe.excludedGroups.elasticsearch.version>
-            </properties>
-        </profile>
-
-        <!-- Elasticsearch 7.11 test environment -->
-        <profile>
-            <id>elasticsearch-7.11</id>
-            <properties>
-                <failsafe.excludedGroups.elasticsearch.version>
-                    <!-- Nothing here -->
-                </failsafe.excludedGroups.elasticsearch.version>
-            </properties>
-        </profile>
-
-        <!-- Elasticsearch 7.12+ test environment -->
-        <profile>
-            <id>elasticsearch-7.12</id>
-            <activation>
-                <!-- This must be re-defined here: the activation defined in the parent pom is not enough -->
-                <!-- Activate by default, i.e. if test.elasticsearch.connection.version has not been defined explicitly -->
-                <property>
-                    <name>!test.elasticsearch.connection.version</name>
-                </property>
-            </activation>
-            <properties>
-                <failsafe.excludedGroups.elasticsearch.version>
-                    <!-- Nothing here -->
-                </failsafe.excludedGroups.elasticsearch.version>
-            </properties>
-        </profile>
-
-        <!-- OpenSearch 1.0+ test environment -->
-        <profile>
-            <id>opensearch-1.0</id>
-            <properties>
-                <failsafe.excludedGroups.elasticsearch.version>
-                    <!-- Nothing here -->
-                </failsafe.excludedGroups.elasticsearch.version>
-            </properties>
-        </profile>
-    </profiles>
-
+                    org.hibernate.search.integrationtest.backend.elasticsearch.testsupport.categories.RequiresSingleModelDialectForMajorVersion</failsafe.excludedGroups.elasticsearch.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-6.0</id>
+      <properties>
+        <failsafe.excludedGroups.elasticsearch.version>,
+                    org.hibernate.search.integrationtest.backend.elasticsearch.testsupport.categories.RequiresIndexAliasIsWriteIndex</failsafe.excludedGroups.elasticsearch.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-6.3</id>
+      <properties>
+        <failsafe.excludedGroups.elasticsearch.version>,
+                    org.hibernate.search.integrationtest.backend.elasticsearch.testsupport.categories.RequiresIndexAliasIsWriteIndex</failsafe.excludedGroups.elasticsearch.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-6.4</id>
+      <properties>
+        <failsafe.excludedGroups.elasticsearch.version></failsafe.excludedGroups.elasticsearch.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-6.7</id>
+      <properties>
+        <failsafe.excludedGroups.elasticsearch.version></failsafe.excludedGroups.elasticsearch.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-6.8</id>
+      <properties>
+        <failsafe.excludedGroups.elasticsearch.version></failsafe.excludedGroups.elasticsearch.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-7.0</id>
+      <properties>
+        <failsafe.excludedGroups.elasticsearch.version></failsafe.excludedGroups.elasticsearch.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-7.3</id>
+      <properties>
+        <failsafe.excludedGroups.elasticsearch.version></failsafe.excludedGroups.elasticsearch.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-7.7</id>
+      <properties>
+        <failsafe.excludedGroups.elasticsearch.version></failsafe.excludedGroups.elasticsearch.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-7.8</id>
+      <properties>
+        <failsafe.excludedGroups.elasticsearch.version></failsafe.excludedGroups.elasticsearch.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-7.10</id>
+      <properties>
+        <failsafe.excludedGroups.elasticsearch.version></failsafe.excludedGroups.elasticsearch.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-7.11</id>
+      <properties>
+        <failsafe.excludedGroups.elasticsearch.version></failsafe.excludedGroups.elasticsearch.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>elasticsearch-7.12</id>
+      <activation>
+        <property>
+          <name>!test.elasticsearch.connection.version</name>
+        </property>
+      </activation>
+      <properties>
+        <failsafe.excludedGroups.elasticsearch.version></failsafe.excludedGroups.elasticsearch.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>opensearch-1.0</id>
+      <properties>
+        <failsafe.excludedGroups.elasticsearch.version></failsafe.excludedGroups.elasticsearch.version>
+      </properties>
+    </profile>
+  </profiles>
 </project>
-
