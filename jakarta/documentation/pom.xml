@@ -86,57 +86,54 @@
                 <artifactId>maven-antrun-plugin</artifactId>
             </plugin>
             <plugin>
-                <groupId>io.fabric8</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <executions>
-                    <execution>
-                        <id>it-lucene</id>
-                        <goals>
-                            <goal>integration-test</goal>
-                        </goals>
-                        <configuration>
-                            <reportNameSuffix>${surefire.reportNameSuffix}-lucene</reportNameSuffix>
-                            <classpathDependencyExcludes>
-                                <classpathDependencyExclude>org.hibernate.search:hibernate-search-backend-elasticsearch</classpathDependencyExclude>
-                            </classpathDependencyExcludes>
-                            <systemPropertyVariables>
-                                <org.hibernate.search.integrationtest.backend.type>lucene</org.hibernate.search.integrationtest.backend.type>
-                            </systemPropertyVariables>
-                            <excludes>
-                                <exclude>**/Elasticsearch*IT</exclude>
-                            </excludes>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>it-elasticsearch</id>
-                        <goals>
-                            <goal>integration-test</goal>
-                        </goals>
-                        <configuration>
-                            <reportNameSuffix>${surefire.reportNameSuffix}-elasticsearch</reportNameSuffix>
-                            <classpathDependencyExcludes>
-                                <classpathDependencyExclude>org.hibernate.search:hibernate-search-backend-lucene</classpathDependencyExclude>
-                            </classpathDependencyExcludes>
-                            <systemPropertyVariables>
-                                <org.hibernate.search.integrationtest.backend.type>elasticsearch</org.hibernate.search.integrationtest.backend.type>
-                            </systemPropertyVariables>
-                            <excludes>
-                                <exclude>**/Lucene*IT</exclude>
-                            </excludes>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>it-verify</id>
-                        <goals>
-                            <goal>verify</goal>
-                        </goals>
-                    </execution>
-                </executions>
+          <execution>
+            <id>it-lucene</id>
+            <goals>
+              <goal>integration-test</goal>
+            </goals>
+            <configuration>
+              <reportNameSuffix>${surefire.reportNameSuffix}-lucene</reportNameSuffix>
+              <classpathDependencyExcludes>
+                <classpathDependencyExclude>org.hibernate.search:hibernate-search-backend-elasticsearch</classpathDependencyExclude>
+              </classpathDependencyExcludes>
+              <systemPropertyVariables>
+                <org.hibernate.search.integrationtest.backend.type>lucene</org.hibernate.search.integrationtest.backend.type>
+              </systemPropertyVariables>
+              <excludes>
+                <exclude>**/Elasticsearch*IT</exclude>
+              </excludes>
+            </configuration>
+          </execution>
+          <execution>
+            <id>it-elasticsearch</id>
+            <goals>
+              <goal>integration-test</goal>
+            </goals>
+            <configuration>
+              <reportNameSuffix>${surefire.reportNameSuffix}-elasticsearch</reportNameSuffix>
+              <classpathDependencyExcludes>
+                <classpathDependencyExclude>org.hibernate.search:hibernate-search-backend-lucene</classpathDependencyExclude>
+              </classpathDependencyExcludes>
+              <systemPropertyVariables>
+                <org.hibernate.search.integrationtest.backend.type>elasticsearch</org.hibernate.search.integrationtest.backend.type>
+              </systemPropertyVariables>
+              <excludes>
+                <exclude>**/Lucene*IT</exclude>
+              </excludes>
+            </configuration>
+          </execution>
+          <execution>
+            <id>it-verify</id>
+            <goals>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
             </plugin>
+            
         </plugins>
     </build>
 </project>

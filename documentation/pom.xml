@@ -95,83 +95,85 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>io.fabric8</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <executions>
-                    <execution>
-                        <id>it-lucene</id>
-                        <goals>
-                            <goal>integration-test</goal>
-                        </goals>
-                        <configuration>
-                            <reportNameSuffix>${surefire.reportNameSuffix}-lucene</reportNameSuffix>
-                            <classpathDependencyExcludes>
-                                <classpathDependencyExclude>org.hibernate.search:hibernate-search-backend-elasticsearch</classpathDependencyExclude>
-                            </classpathDependencyExcludes>
-                            <systemPropertyVariables>
-                                <org.hibernate.search.integrationtest.backend.type>lucene</org.hibernate.search.integrationtest.backend.type>
-                            </systemPropertyVariables>
-                            <excludes>
-                                <exclude>**/Elasticsearch*IT</exclude>
-                            </excludes>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>it-elasticsearch</id>
-                        <goals>
-                            <goal>integration-test</goal>
-                        </goals>
-                        <configuration>
-                            <reportNameSuffix>${surefire.reportNameSuffix}-elasticsearch</reportNameSuffix>
-                            <classpathDependencyExcludes>
-                                <classpathDependencyExclude>org.hibernate.search:hibernate-search-backend-lucene</classpathDependencyExclude>
-                            </classpathDependencyExcludes>
-                            <systemPropertyVariables>
-                                <org.hibernate.search.integrationtest.backend.type>elasticsearch</org.hibernate.search.integrationtest.backend.type>
-                            </systemPropertyVariables>
-                            <excludes>
-                                <exclude>**/Lucene*IT</exclude>
-                            </excludes>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>it-verify</id>
-                        <goals>
-                            <goal>verify</goal>
-                        </goals>
-                    </execution>
-                </executions>
+          <execution>
+            <id>it-lucene</id>
+            <goals>
+              <goal>integration-test</goal>
+            </goals>
+            <configuration>
+              <reportNameSuffix>${surefire.reportNameSuffix}-lucene</reportNameSuffix>
+              <classpathDependencyExcludes>
+                <classpathDependencyExclude>org.hibernate.search:hibernate-search-backend-elasticsearch</classpathDependencyExclude>
+              </classpathDependencyExcludes>
+              <systemPropertyVariables>
+                <org.hibernate.search.integrationtest.backend.type>lucene</org.hibernate.search.integrationtest.backend.type>
+              </systemPropertyVariables>
+              <excludes>
+                <exclude>**/Elasticsearch*IT</exclude>
+              </excludes>
+            </configuration>
+          </execution>
+          <execution>
+            <id>it-elasticsearch</id>
+            <goals>
+              <goal>integration-test</goal>
+            </goals>
+            <configuration>
+              <reportNameSuffix>${surefire.reportNameSuffix}-elasticsearch</reportNameSuffix>
+              <classpathDependencyExcludes>
+                <classpathDependencyExclude>org.hibernate.search:hibernate-search-backend-lucene</classpathDependencyExclude>
+              </classpathDependencyExcludes>
+              <systemPropertyVariables>
+                <org.hibernate.search.integrationtest.backend.type>elasticsearch</org.hibernate.search.integrationtest.backend.type>
+              </systemPropertyVariables>
+              <excludes>
+                <exclude>**/Lucene*IT</exclude>
+              </excludes>
+            </configuration>
+          </execution>
+          <execution>
+            <id>it-verify</id>
+            <goals>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
                         <id>unpack-asciidoctor-theme</id>
-                        <phase>generate-resources</phase>
                         <goals>
                             <goal>unpack</goal>
                         </goals>
+                        <phase>generate-resources</phase>
                         <configuration>
                             <artifactItems>
-                                <artifactItem>
-                                    <groupId>org.hibernate.infra</groupId>
-                                    <artifactId>hibernate-asciidoctor-theme</artifactId>
-                                    <version>${version.org.hibernate.infra.hibernate-asciidoctor-theme}</version>
-                                    <type>zip</type>
-                                    <overWrite>true</overWrite>
-                                    <outputDirectory>${project.build.directory}/</outputDirectory>
-                                </artifactItem>
-                            </artifactItems>
+                <artifactItem>
+                  <groupId>org.hibernate.infra</groupId>
+                  <artifactId>hibernate-asciidoctor-theme</artifactId>
+                  <version>${version.org.hibernate.infra.hibernate-asciidoctor-theme}</version>
+                  <type>zip</type>
+                  <overWrite>true</overWrite>
+                  <outputDirectory>${project.build.directory}/</outputDirectory>
+                </artifactItem>
+              </artifactItems>
+                            
+                            
+                            
+                            
                         </configuration>
                     </execution>
+                    
+                    
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
                 <executions>
                     <execution>
@@ -182,44 +184,45 @@
                         </goals>
                         <configuration>
                             <resources>
-                                <resource>
-                                    <directory>${asciidoctor.theme-dir}</directory>
-                                    <filtering>true</filtering>
-                                </resource>
-                            </resources>
+                <resource>
+                  <directory>${asciidoctor.theme-dir}</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
                             <outputDirectory>${asciidoctor.aggregated-resources-dir}</outputDirectory>
+                            
                         </configuration>
                     </execution>
                     <execution>
-                        <id>copy-local-resources-to-aggregated-resources</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <resources>
-                                <resource>
-                                    <directory>${basedir}/src/main/resources</directory>
-                                    <filtering>true</filtering>
-                                </resource>
-                            </resources>
-                            <outputDirectory>${asciidoctor.aggregated-resources-dir}</outputDirectory>
-                            <overwrite>true</overwrite>
-                        </configuration>
-                    </execution>
+            <id>copy-local-resources-to-aggregated-resources</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <resources>
+                <resource>
+                  <directory>${basedir}/src/main/resources</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+              <outputDirectory>${asciidoctor.aggregated-resources-dir}</outputDirectory>
+              <overwrite>true</overwrite>
+            </configuration>
+          </execution>
                 </executions>
                 <configuration>
-                    <nonFilteredFileExtensions>
-                        <nonFilteredFileExtension>ttf</nonFilteredFileExtension>
-                        <nonFilteredFileExtension>eot</nonFilteredFileExtension>
-                        <nonFilteredFileExtension>otf</nonFilteredFileExtension>
-                        <nonFilteredFileExtension>svg</nonFilteredFileExtension>
-                        <nonFilteredFileExtension>woff</nonFilteredFileExtension>
-                        <nonFilteredFileExtension>woff2</nonFilteredFileExtension>
-                        <nonFilteredFileExtension>png</nonFilteredFileExtension>
-                        <nonFilteredFileExtension>dia</nonFilteredFileExtension>
-                    </nonFilteredFileExtensions>
-                </configuration>
+          <nonFilteredFileExtensions>
+            <nonFilteredFileExtension>ttf</nonFilteredFileExtension>
+            <nonFilteredFileExtension>eot</nonFilteredFileExtension>
+            <nonFilteredFileExtension>otf</nonFilteredFileExtension>
+            <nonFilteredFileExtension>svg</nonFilteredFileExtension>
+            <nonFilteredFileExtension>woff</nonFilteredFileExtension>
+            <nonFilteredFileExtension>woff2</nonFilteredFileExtension>
+            <nonFilteredFileExtension>png</nonFilteredFileExtension>
+            <nonFilteredFileExtension>dia</nonFilteredFileExtension>
+          </nonFilteredFileExtensions>
+        </configuration>
             </plugin>
             <plugin>
                 <groupId>org.asciidoctor</groupId>
@@ -232,16 +235,17 @@
                             <goal>process-asciidoc</goal>
                         </goals>
                         <configuration>
+                            
+                            <outputDirectory>${asciidoctor.base-output-dir}/reference/html_single</outputDirectory>
                             <backend>html5</backend>
                             <sourceDocumentName>reference/index.asciidoc</sourceDocumentName>
-                            <outputDirectory>${asciidoctor.base-output-dir}/reference/html_single</outputDirectory>
                             <attributes>
-                                <imagesdir>images</imagesdir>
-                                <stylesdir>css</stylesdir>
-                                <iconfont-remote>false</iconfont-remote>
-                                <iconfont-name>font-awesome/css/font-awesome.min</iconfont-name>
-                                <source-highlighter>coderay</source-highlighter>
-                            </attributes>
+                <imagesdir>images</imagesdir>
+                <stylesdir>css</stylesdir>
+                <iconfont-remote>false</iconfont-remote>
+                <iconfont-name>font-awesome/css/font-awesome.min</iconfont-name>
+                <source-highlighter>coderay</source-highlighter>
+              </attributes>
                         </configuration>
                     </execution>
                     <execution>
@@ -251,94 +255,88 @@
                             <goal>process-asciidoc</goal>
                         </goals>
                         <configuration>
+                            
+                            <outputDirectory>${asciidoctor.base-output-dir}/internals/html_single</outputDirectory>
                             <backend>html5</backend>
                             <sourceDocumentName>internals/index.asciidoc</sourceDocumentName>
-                            <outputDirectory>${asciidoctor.base-output-dir}/internals/html_single</outputDirectory>
                             <attributes>
-                                <imagesdir>images</imagesdir>
-                                <stylesdir>css</stylesdir>
-                                <iconfont-remote>false</iconfont-remote>
-                                <iconfont-name>font-awesome/css/font-awesome.min</iconfont-name>
-                                <source-highlighter>coderay</source-highlighter>
-                            </attributes>
+                <imagesdir>images</imagesdir>
+                <stylesdir>css</stylesdir>
+                <iconfont-remote>false</iconfont-remote>
+                <iconfont-name>font-awesome/css/font-awesome.min</iconfont-name>
+                <source-highlighter>coderay</source-highlighter>
+              </attributes>
+                            
                         </configuration>
                     </execution>
                     <execution>
-                        <id>migration-output-html</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>process-asciidoc</goal>
-                        </goals>
-                        <configuration>
-                            <backend>html5</backend>
-                            <sourceDocumentName>migration/index.asciidoc</sourceDocumentName>
-                            <outputDirectory>${asciidoctor.base-output-dir}/migration/html_single</outputDirectory>
-                            <attributes>
-                                <imagesdir>images</imagesdir>
-                                <stylesdir>css</stylesdir>
-                                <iconfont-remote>false</iconfont-remote>
-                                <iconfont-name>font-awesome/css/font-awesome.min</iconfont-name>
-                                <source-highlighter>coderay</source-highlighter>
-                            </attributes>
-                        </configuration>
-                    </execution>
+            <id>migration-output-html</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>process-asciidoc</goal>
+            </goals>
+            <configuration>
+              <backend>html5</backend>
+              <sourceDocumentName>migration/index.asciidoc</sourceDocumentName>
+              <outputDirectory>${asciidoctor.base-output-dir}/migration/html_single</outputDirectory>
+              <attributes>
+                <imagesdir>images</imagesdir>
+                <stylesdir>css</stylesdir>
+                <iconfont-remote>false</iconfont-remote>
+                <iconfont-name>font-awesome/css/font-awesome.min</iconfont-name>
+                <source-highlighter>coderay</source-highlighter>
+              </attributes>
+            </configuration>
+          </execution>
                 </executions>
                 <configuration>
                     <relativeBaseDir>true</relativeBaseDir>
                     <attributes>
-                        <sourcedir>${asciidoctor.examples-source-dir}</sourcedir>
-                        <resourcesdir>${asciidoctor.examples-resources-dir}</resourcesdir>
-                        <docinfodir>${asciidoctor.aggregated-resources-dir}/docinfo/noorm-documentation</docinfodir>
-                        <icons>font</icons>
-                        <tabsize>4</tabsize>
-
-                        <hibernateSearchVersion>${project.version}</hibernateSearchVersion>
-                        <hibernateSearchVersionShort>${parsed-version.org.hibernate.search.majorVersion}.${parsed-version.org.hibernate.search.minorVersion}</hibernateSearchVersionShort>
-                        <hibernateSearchPreviousStableVersionShort>${parsed-version.org.hibernate.search.previous-stable.majorVersion}.${parsed-version.org.hibernate.search.previous-stable.minorVersion}</hibernateSearchPreviousStableVersionShort>
-                        <hibernateSearchJavadocUrl>${javadoc.org.hibernate.search.url}</hibernateSearchJavadocUrl>
-                        <hibernateSearchDocUrl>https://docs.jboss.org/hibernate/search/${parsed-version.org.hibernate.search.majorVersion}.${parsed-version.org.hibernate.search.minorVersion}/reference/en-US/html_single/</hibernateSearchDocUrl>
-                        <hibernateSearchPreviousStableDocUrl>https://docs.jboss.org/hibernate/search/${parsed-version.org.hibernate.search.previous-stable.majorVersion}.${parsed-version.org.hibernate.search.previous-stable.minorVersion}/reference/en-US/html_single/</hibernateSearchPreviousStableDocUrl>
-                        <hibernateSearchJiraUrl>https://hibernate.atlassian.net/browse</hibernateSearchJiraUrl>
-                        <hibernateSearchMigrationGuidesIndexUrl>https://hibernate.org/search/documentation/migrate/</hibernateSearchMigrationGuidesIndexUrl>
-                        <hibernateCommunityUrl>https://hibernate.org/community</hibernateCommunityUrl>
-                        <hibernateBlogUrl>https://in.relation.to/</hibernateBlogUrl>
-                        <hibernateVersion>${version.org.hibernate}</hibernateVersion>
-                        <hibernateDocUrl>${documentation.org.hibernate.url}</hibernateDocUrl>
-                        <jpaVersion>${parsed-version.javax.persistence.majorVersion}.${parsed-version.javax.persistence.minorVersion}</jpaVersion>
-                        <hibernateOrm6DocUrl>${documentation.org.hibernate.orm.url}</hibernateOrm6DocUrl>
-                        <hibernateOrm6Version>${version.org.hibernate.orm}</hibernateOrm6Version>
-                        <jakartaUrl>https://jakarta.ee/</jakartaUrl>
-                        <jakartaPersistenceVersion>${parsed-version.jakarta.persistence.majorVersion}.${parsed-version.jakarta.persistence.minorVersion}</jakartaPersistenceVersion>
-                        <luceneVersion>${version.org.apache.lucene}</luceneVersion>
-                        <luceneUrl>https://lucene.apache.org</luceneUrl>
-                        <luceneJavadocUrl>${javadoc.org.apache.lucene.core.url}</luceneJavadocUrl>
-                        <elasticsearchUrl>https://www.elastic.co/elasticsearch</elasticsearchUrl>
-                        <elasticsearchDocUrl>${documentation.org.elasticsearch.url}</elasticsearchDocUrl>
-                        <elasticsearchClientVersions>${version.org.elasticsearch.client}</elasticsearchClientVersions>
-                        <elasticsearchCompatibleVersions>${version.org.elasticsearch.compatible.regularly-tested.text}</elasticsearchCompatibleVersions>
-                        <elasticsearchOtherPotentiallyCompatibleVersions>${version.org.elasticsearch.compatible.not-regularly-tested.text}</elasticsearchOtherPotentiallyCompatibleVersions>
-                        <openSearchUrl>https://www.opensearch.org</openSearchUrl>
-                        <openSearchCompatibleVersions>${version.org.opensearch.compatible.regularly-tested.text}</openSearchCompatibleVersions>
-                        <wildflyUrl>https://wildfly.org/</wildflyUrl>
-                        <quarkusUrl>https://quarkus.io/</quarkusUrl>
-                        <springUrl>https://spring.io/</springUrl>
-                        <springBootUrl>https://spring.io/projects/spring-boot</springBootUrl>
-                        <testSpringBootVersion>${version.org.springframework.boot}</testSpringBootVersion>
-                        <gsonUrl>https://github.com/google/gson</gsonUrl>
-                    </attributes>
+            <sourcedir>${asciidoctor.examples-source-dir}</sourcedir>
+            <resourcesdir>${asciidoctor.examples-resources-dir}</resourcesdir>
+            <docinfodir>${asciidoctor.aggregated-resources-dir}/docinfo/noorm-documentation</docinfodir>
+            <icons>font</icons>
+            <tabsize>4</tabsize>
+            <hibernateSearchVersion>${project.version}</hibernateSearchVersion>
+            <hibernateSearchVersionShort>${parsed-version.org.hibernate.search.majorVersion}.${parsed-version.org.hibernate.search.minorVersion}</hibernateSearchVersionShort>
+            <hibernateSearchPreviousStableVersionShort>${parsed-version.org.hibernate.search.previous-stable.majorVersion}.${parsed-version.org.hibernate.search.previous-stable.minorVersion}</hibernateSearchPreviousStableVersionShort>
+            <hibernateSearchJavadocUrl>${javadoc.org.hibernate.search.url}</hibernateSearchJavadocUrl>
+            <hibernateSearchDocUrl>https://docs.jboss.org/hibernate/search/${parsed-version.org.hibernate.search.majorVersion}.${parsed-version.org.hibernate.search.minorVersion}/reference/en-US/html_single/</hibernateSearchDocUrl>
+            <hibernateSearchPreviousStableDocUrl>https://docs.jboss.org/hibernate/search/${parsed-version.org.hibernate.search.previous-stable.majorVersion}.${parsed-version.org.hibernate.search.previous-stable.minorVersion}/reference/en-US/html_single/</hibernateSearchPreviousStableDocUrl>
+            <hibernateSearchJiraUrl>https://hibernate.atlassian.net/browse</hibernateSearchJiraUrl>
+            <hibernateSearchMigrationGuidesIndexUrl>https://hibernate.org/search/documentation/migrate/</hibernateSearchMigrationGuidesIndexUrl>
+            <hibernateCommunityUrl>https://hibernate.org/community</hibernateCommunityUrl>
+            <hibernateBlogUrl>https://in.relation.to/</hibernateBlogUrl>
+            <hibernateVersion>${version.org.hibernate}</hibernateVersion>
+            <hibernateDocUrl>${documentation.org.hibernate.url}</hibernateDocUrl>
+            <jpaVersion>${parsed-version.javax.persistence.majorVersion}.${parsed-version.javax.persistence.minorVersion}</jpaVersion>
+            <hibernateOrm6DocUrl>${documentation.org.hibernate.orm.url}</hibernateOrm6DocUrl>
+            <hibernateOrm6Version>${version.org.hibernate.orm}</hibernateOrm6Version>
+            <jakartaUrl>https://jakarta.ee/</jakartaUrl>
+            <jakartaPersistenceVersion>${parsed-version.jakarta.persistence.majorVersion}.${parsed-version.jakarta.persistence.minorVersion}</jakartaPersistenceVersion>
+            <luceneVersion>${version.org.apache.lucene}</luceneVersion>
+            <luceneUrl>https://lucene.apache.org</luceneUrl>
+            <luceneJavadocUrl>${javadoc.org.apache.lucene.core.url}</luceneJavadocUrl>
+            <elasticsearchUrl>https://www.elastic.co/elasticsearch</elasticsearchUrl>
+            <elasticsearchDocUrl>${documentation.org.elasticsearch.url}</elasticsearchDocUrl>
+            <elasticsearchClientVersions>${version.org.elasticsearch.client}</elasticsearchClientVersions>
+            <elasticsearchCompatibleVersions>${version.org.elasticsearch.compatible.regularly-tested.text}</elasticsearchCompatibleVersions>
+            <elasticsearchOtherPotentiallyCompatibleVersions>${version.org.elasticsearch.compatible.not-regularly-tested.text}</elasticsearchOtherPotentiallyCompatibleVersions>
+            <openSearchUrl>https://www.opensearch.org</openSearchUrl>
+            <openSearchCompatibleVersions>${version.org.opensearch.compatible.regularly-tested.text}</openSearchCompatibleVersions>
+            <wildflyUrl>https://wildfly.org/</wildflyUrl>
+            <quarkusUrl>https://quarkus.io/</quarkusUrl>
+            <springUrl>https://spring.io/</springUrl>
+            <springBootUrl>https://spring.io/projects/spring-boot</springBootUrl>
+            <testSpringBootVersion>${version.org.springframework.boot}</testSpringBootVersion>
+            <gsonUrl>https://github.com/google/gson</gsonUrl>
+          </attributes>
+                    
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <descriptors>
-                        <descriptor>${basedir}/src/main/assembly/dist.xml</descriptor>
-                    </descriptors>
-                    <attach>false</attach>
-                    <finalName>dist</finalName>
-                    <appendAssemblyId>false</appendAssemblyId>
-                </configuration>
                 <executions>
                     <execution>
                         <id>make-dist</id>
@@ -347,8 +345,21 @@
                             <goal>single</goal>
                         </goals>
                     </execution>
+                    
+                    
                 </executions>
+                <configuration>
+                    <descriptors>
+            <descriptor>${basedir}/src/main/assembly/dist.xml</descriptor>
+          </descriptors>
+                    <attach>false</attach>
+                    <finalName>dist</finalName>
+                    <appendAssemblyId>false</appendAssemblyId>
+                    
+                    
+                </configuration>
             </plugin>
+            
         </plugins>
     </build>
     <profiles>
@@ -376,7 +387,7 @@
                                         <pdf-stylesdir>${asciidoctor.aggregated-resources-dir}/theme</pdf-stylesdir>
                                         <pdf-style>hibernate</pdf-style>
                                         <pdf-fontsdir>${asciidoctor.aggregated-resources-dir}/theme/fonts</pdf-fontsdir>
-                                        <pagenums/>
+                                        <pagenums />
                                         <idseparator>-</idseparator>
                                         <source-highlighter>coderay</source-highlighter>
                                     </attributes>
@@ -398,7 +409,7 @@
                                         <pdf-stylesdir>${asciidoctor.aggregated-resources-dir}/theme</pdf-stylesdir>
                                         <pdf-style>hibernate</pdf-style>
                                         <pdf-fontsdir>${asciidoctor.aggregated-resources-dir}/theme/fonts</pdf-fontsdir>
-                                        <pagenums/>
+                                        <pagenums />
                                         <idseparator>-</idseparator>
                                         <source-highlighter>coderay</source-highlighter>
                                     </attributes>
@@ -420,7 +431,7 @@
                                         <pdf-stylesdir>${asciidoctor.aggregated-resources-dir}/theme</pdf-stylesdir>
                                         <pdf-style>hibernate</pdf-style>
                                         <pdf-fontsdir>${asciidoctor.aggregated-resources-dir}/theme/fonts</pdf-fontsdir>
-                                        <pagenums/>
+                                        <pagenums />
                                         <idseparator>-</idseparator>
                                         <source-highlighter>coderay</source-highlighter>
                                     </attributes>
